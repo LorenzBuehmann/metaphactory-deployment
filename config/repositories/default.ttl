@@ -1,0 +1,18 @@
+@prefix search: <http://www.metaphacts.com/ontologies/platform/service/search/> .
+@prefix pathfinder: <http://www.metaphacts.com/ontologies/platform/service/pathfinder/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix http: <http://www.openrdf.org/config/repository/http#> .
+@prefix config: <tag:rdf4j.org,2023:config/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix mph: <http://www.metaphacts.com/ontologies/platform/repository#> .
+@prefix ephedra: <http://www.metaphacts.com/ontologies/platform/ephedra#> .
+
+[] a config:Repository;
+  config:rep.id "default";
+  rdfs:label "GraphDB repository";
+  config:rep.impl [
+      config:rep.type "metaphactory:GraphDBRepository";
+      config:http.url <http://graphdb:7200/repositories/metaphactory>;
+      mph:username "admin";
+      mph:password "root"
+    ] .
