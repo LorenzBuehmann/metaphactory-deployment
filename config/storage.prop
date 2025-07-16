@@ -1,6 +1,6 @@
 assetStorage.type = git
 assetStorage.mutable = true
-assetStorage.localPath = /storage/my-ontologies
+assetStorage.localPath = /storage/my-ontologies2
 assetStorage.remoteUrl = https://github.com/LorenzBuehmann/metaphactory-deployment.git
 assetStorage.username = ${storage.git.username}
 assetStorage.password = ${storage.git.token}
