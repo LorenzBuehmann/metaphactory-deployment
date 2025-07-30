@@ -1,0 +1,5 @@
+responseformat = application/sparql-results+json
+iri = http://localhost:10214/container/queryTemplateContainer/latest-version-of-an-ontology
+aclPermission = qaas:execute:*
+disabled = false
+publisher = http://www.metaphacts.com/resource/user/admin
