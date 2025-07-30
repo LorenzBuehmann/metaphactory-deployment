@@ -1,0 +1,42 @@
+@prefix : <https://vocabularies.metaphacts.com/delete.me2/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix vaem: <http://www.linkedmodel.org/1.2/schema/vaem#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:0.2 a skos:ConceptScheme;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-07-14T12:58:06.857Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-07-30T09:20:02.625Z"^^xsd:dateTime;
+  dct:title "delete.me2"@en;
+  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
+  vaem:namespace <https://vocabularies.metaphacts.com/delete.me2/>;
+  rdfs:label "delete.me2"@en;
+  owl:priorVersion :0.1;
+  owl:versionInfo "0.2";
+  skos:hasTopConcept :6d2b9525-7ceb-478f-ad44-ecb9f9ec5c1e;
+  skos:prefLabel "delete.me2"@en .
+
+:61ef6685-3e42-4cca-98fb-1a0eeb6c655d a skos:Concept;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-07-30T09:20:02.625Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-07-30T09:20:02.625Z"^^xsd:dateTime;
+  skos:broader :6d2b9525-7ceb-478f-ad44-ecb9f9ec5c1e;
+  skos:inScheme :0.2;
+  skos:prefLabel "A1"@en .
+
+:6d2b9525-7ceb-478f-ad44-ecb9f9ec5c1e a skos:Concept;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-07-14T12:59:24.312Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-07-14T12:59:24.312Z"^^xsd:dateTime;
+  skos:inScheme :0.2;
+  skos:prefLabel "A"@en .
