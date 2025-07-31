@@ -1,0 +1,15 @@
+
+<http://localhost:10214/container/queryContainer/returns_the_given_int_multiplied_by_2/context> {
+  <http://localhost:10214/container/queryContainer/returns_the_given_int_multiplied_by_2>
+    a <http://spinrdf.org/sp#Query>, <http://spinrdf.org/sp#Select>, <http://www.w3.org/ns/prov#Entity>,
+      <http://www.w3.org/ns/ldp#Resource>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "returns the given int multiplied by 2";
+    <http://spinrdf.org/sp#text> """SELECT ?res {
+  BIND(?i * 2 AS ?res) 
+}""";
+    <http://www.w3.org/ns/prov#wasAttributedTo> <http://www.metaphacts.com/resource/user/admin>;
+    <http://www.w3.org/ns/prov#generatedAtTime> "2025-07-31T07:12:52.829Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+  
+  <http://www.metaphacts.com/ontologies/platform#queryContainer> <http://www.w3.org/ns/ldp#contains>
+      <http://localhost:10214/container/queryContainer/returns_the_given_int_multiplied_by_2> .
+}
