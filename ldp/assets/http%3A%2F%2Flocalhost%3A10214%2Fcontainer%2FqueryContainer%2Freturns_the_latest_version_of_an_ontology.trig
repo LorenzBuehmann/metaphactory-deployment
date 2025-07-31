@@ -1,0 +1,18 @@
+
+<http://localhost:10214/container/queryContainer/returns_the_latest_version_of_an_ontology/context> {
+  <http://localhost:10214/container/queryContainer/returns_the_latest_version_of_an_ontology>
+    a <http://spinrdf.org/sp#Query>, <http://spinrdf.org/sp#Select>, <http://www.w3.org/ns/prov#Entity>,
+      <http://www.w3.org/ns/ldp#Resource>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "returns the latest version of an ontology";
+    <http://spinrdf.org/sp#text> """PREFIX owl: <http://www.w3.org/2002/07/owl#>
+select ?uri {
+  BIND(IRI(?o) AS ?uri)
+  ?uri a owl:Ontology .
+  FILTER NOT EXISTS {?o1 owl:priorVersion ?o}
+} LIMIT 10""";
+    <http://www.w3.org/ns/prov#wasAttributedTo> <http://www.metaphacts.com/resource/user/admin>;
+    <http://www.w3.org/ns/prov#generatedAtTime> "2025-07-31T08:19:36.014Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+  
+  <http://www.metaphacts.com/ontologies/platform#queryContainer> <http://www.w3.org/ns/ldp#contains>
+      <http://localhost:10214/container/queryContainer/returns_the_latest_version_of_an_ontology> .
+}
