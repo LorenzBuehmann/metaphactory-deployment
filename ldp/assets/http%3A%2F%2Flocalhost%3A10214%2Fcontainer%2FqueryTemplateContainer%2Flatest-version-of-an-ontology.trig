@@ -1,0 +1,22 @@
+
+<http://localhost:10214/container/queryTemplateContainer/latest-version-of-an-ontology/context> {
+  <http://metaphacts.com/query/latest-version-of-an-ontology/arg/0> a <http://spinrdf.org/spl#Argument>;
+    <http://www.w3.org/2000/01/rdf-schema#comment> "";
+    <http://spinrdf.org/spl#optional> false;
+    <http://www.w3.org/2000/01/rdf-schema#label> "ontology_iri";
+    <http://spinrdf.org/spl#valueType> <http://www.w3.org/2001/XMLSchema#anyURI>;
+    <http://spinrdf.org/spl#predicate> <http://metaphacts.com/query/latest-version-of-an-ontology/predicate/o> .
+  
+  <http://localhost:10214/container/queryTemplateContainer/latest-version-of-an-ontology>
+    a <http://spinrdf.org/spin#Template>, <http://spinrdf.org/spin#SelectTemplate>, <http://www.w3.org/ns/prov#Entity>,
+      <http://www.w3.org/ns/ldp#Resource>;
+    <http://spinrdf.org/spin#body> <http://localhost:10214/container/queryContainer/returns_the_latest_version_of_an_ontology>;
+    <http://spinrdf.org/spin#constraint> <http://metaphacts.com/query/latest-version-of-an-ontology/arg/0>;
+    <http://www.w3.org/2000/01/rdf-schema#comment> "returns the latest version of an ontology";
+    <http://www.w3.org/2000/01/rdf-schema#label> "latest version of an ontology";
+    <http://www.w3.org/ns/prov#wasAttributedTo> <http://www.metaphacts.com/resource/user/admin>;
+    <http://www.w3.org/ns/prov#generatedAtTime> "2025-07-31T08:39:44.488Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+  
+  <http://www.metaphacts.com/ontologies/platform#queryTemplateContainer> <http://www.w3.org/ns/ldp#contains>
+      <http://localhost:10214/container/queryTemplateContainer/latest-version-of-an-ontology> .
+}
