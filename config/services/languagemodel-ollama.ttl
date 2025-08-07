@@ -1,0 +1,26 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix service-config: <http://www.metaphacts.com/ontologies/platform/service/config/> .
+@prefix ai-service-config: <http://www.metaphacts.com/ontologies/platform/service/config/ai/> .
+@prefix llm: <http://www.metaphacts.com/ontologies/platform/service/config/ai/languagemodel/> .
+
+<urn:service:languagemodel-ollama> a service-config:Service, ai-service-config:OllamaLanguageModel ;
+  rdfs:label "LLM hosted within an Ollama server" ;
+  service-config:config [
+    # MODEL-SPECIFIC PARAMETERS
+    llm:modelName "qwen3:8B" ;
+    llm:contextWindow 32000 ;
+    llm:temperature 0 ;
+    llm:topK 40 ;
+    llm:topP 0.95 ;
+    llm:frequencyPenalty 0 ;
+    llm:maxCompletionTokens 1000 ;
+    llm:timeoutInSeconds 60 ;
+
+    # PROVIDER-SPECIFIC PARAMETERS
+    llm:endpoint "http://localhost:11434" ;
+
+    # AUTHENTICATION
+    # via custom headers of the HTTP request (optional; only if required by the endpoint)
+    #llm:customHeader "myheader1=${secret.value.one:val1}" , "myheader2=${secret.value.two:val2}" ;
+
+  ] .
