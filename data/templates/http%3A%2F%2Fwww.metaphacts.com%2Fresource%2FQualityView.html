@@ -1,5 +1,5 @@
 <h2>Validate imports against archived ontologies</h2>
-<p>Ontology: <code>{{{resource}}}</code></p>
+<p>Ontology: <code>{{page-resource}}</code></p>
 
 <button id="recomputeAndValidate" class="btn btn-primary">
   Recompute “importsArchived” & run Data Quality
@@ -8,7 +8,7 @@
 <!-- 1) Button click → run the SPARQL UPDATE -->
 <mp-event-proxy
   on-event-source="recomputeAndValidate"
-  on-event-type="click"
+  on-event-type="_click"
   proxy-event-type="SemanticUpdate.Execute"
   proxy-targets='["update-archived-helpers"]'>
 </mp-event-proxy>
