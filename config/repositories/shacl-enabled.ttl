@@ -1,7 +1,7 @@
-@prefix search: <http://www.metaphacts.com/ontologies/platform/service/search/> .
 @prefix pathfinder: <http://www.metaphacts.com/ontologies/platform/service/pathfinder/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix http: <http://www.openrdf.org/config/repository/http#> .
+@prefix search: <http://www.metaphacts.com/ontologies/platform/service/search/> .
 @prefix config: <tag:rdf4j.org,2023:config/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix mph: <http://www.metaphacts.com/ontologies/platform/repository#> .
@@ -12,5 +12,17 @@
   rdfs:label "GraphDB repository";
   config:rep.impl [
       config:rep.type "metaphactory:GraphDBRepository";
-      config:http.url <http://graphdb:7200/repositories/metaphactory2>
+      config:http.url <http://graphdb:7200/repositories/metaphactory2>;
+      mph:username "admin";
+      mph:password "****"
+    ];
+  search:configuration [
+      search:type "metaphacts:graphdbSearch";
+      search:cacheConfig "maximumSize=0";
+      search:connectorNamePattern "lookup-and-keyword";
+      search:entityNameFieldNamePattern "name.*";
+      search:keywordSearchFieldNamePattern "name.*|abstract|allLiterals"
+    ];
+  mph:extension [
+      mph:extensionType "metaphacts:ModelingContext"
     ] .
