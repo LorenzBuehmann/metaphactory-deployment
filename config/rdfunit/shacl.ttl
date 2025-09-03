@@ -33,6 +33,21 @@ rules:NoLabelForTypedEntities
 		sh:message "No rdfs:label for typed entity." 
 	] .
 
+rules:OntologyShouldNotImportArchivedOntology
+    a sh:NodeShape ;
+    sh:targetClass owl:Ontology ;
+    sh:sparql [
+      sh:select """
+     SELECT $this ?o WHERE {
+  #GRAPH ?gA { $this owl:imports ?o . }
+  GRAPH ?gB { ?o  <http://purl.org/ontology/bibo/status>
+                    <http://purl.org/spar/pso/archived> . }
+}
+        """;
+    ];
+    sh:severity sh:Warning ;
+    sh:message "Import of archived ontology:  <{$this}> imports an archived ontology {?o}." ;
+    sh:description "the ontology does import an archived ontology" .
 
 
 # Instead of defining shapes here directly, you can also import SHACL shapes
