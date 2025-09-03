@@ -122,17 +122,9 @@ sh:OntologyShouldNotImportArchivedOntology
     sh:sparql [
       sh:select """
             select $this ?o where {
-      $this owl:imports ?o .
-      ?o <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/archived> .
-  #     graph ?g1 {
-  #    				?a owl:imports ?o .
-            
-  #}
- # graph ?g2 {
- #   ?o <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/archived> .
- # }
-      				#?a owl:imports ?o .
-              #?o <http://purl.org/ontology/bibo/status> ?s .
+              $this owl:imports ?o .
+              ?o <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/archived> .
+
             }
         """;
     ];
