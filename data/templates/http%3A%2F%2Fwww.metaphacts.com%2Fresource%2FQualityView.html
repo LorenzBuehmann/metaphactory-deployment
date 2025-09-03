@@ -1,7 +1,13 @@
-<!-- Trigger -->
-<button id="recomputeAndValidate" class="btn btn-primary">Recompute & validate</button>
+<!-- apps/<your-app>/templates/ontology-qa.html -->
 
-<!-- 1) Button click → SPARQL UPDATE (re)builds helper triples -->
+<h2>Validate imports against archived ontologies</h2>
+<p>Ontology: <code>{{iri}}</code></p>
+
+<button id="recomputeAndValidate" class="btn btn-primary">
+  Recompute “importsArchived” & run Data Quality
+</button>
+
+<!-- 1) Button click → run the SPARQL UPDATE -->
 <mp-event-proxy
   on-event-source="recomputeAndValidate"
   on-event-type="click"
@@ -9,6 +15,7 @@
   proxy-targets='["update-archived-helpers"]'>
 </mp-event-proxy>
 
+<!-- SPARQL UPDATE: build helper triples into THIS ontology's graph -->
 <semantic-update
   id="update-archived-helpers"
   show-confirmation="false"
@@ -19,13 +26,61 @@ PREFIX bibo: <http://purl.org/ontology/bibo/>
 PREFIX pso:  <http://purl.org/spar/pso/>
 PREFIX qa:   <urn:qa:>
 
+# Assumes graph IRI == ontology IRI. Adjust ?g if your graph naming differs.
 DELETE { GRAPH ?g { <{{iri}}> qa:importsArchived ?o . } }
 INSERT { GRAPH ?g { <{{iri}}> qa:importsArchived ?o . } }
 WHERE  {
   BIND(IRI('{{iri}}') AS ?this)
-  BIND(?this AS ?g)  # adjust if graph IRI ≠ ontology IRI
+  BIND(?this AS ?g)
   GRAPH ?g { ?this a owl:Ontology ; owl:imports ?o . }
   GRAPH ?o { ?o bibo:status pso:archived . }
 }">
 </semantic-update>
 
+<!-- 2) After UPDATE → call Data Quality job (plain fetch; no extra component needed) -->
+<script>
+  async function runDQ(iri) {
+    const res = await fetch('/rest/jobs/data-quality/run', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        configurationId: 'ontologies-checks',
+        scope: { semanticContext: 'ontologies-union' },
+        labels: { resource: iri }
+      })
+    });
+    if (!res.ok) throw new Error('Data Quality job failed: ' + res.status);
+    return res.json();
+  }
+
+  // Wire the chain: UPDATE success → run DQ
+  addEventListener('SemanticUpdate.Success', async (e) => {
+    try {
+      const iri = '{{iri}}';
+      const job = await runDQ(iri);
+      console.log('Data Quality run started:', job);
+      alert('Helper triples rebuilt and Data Quality run started.');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to start Data Quality: ' + err.message);
+    }
+  });
+
+  addEventListener('SemanticUpdate.Failed', (e) => {
+    console.warn('Helper update failed', e.detail || e);
+    alert('SPARQL UPDATE failed. See console for details.');
+  });
+</script>
+
+<!-- 3) (Optional) Show the helper triples so you see it worked -->
+<semantic-query
+  id="qa-check"
+  query="
+PREFIX qa: <urn:qa:>
+SELECT ?o WHERE { GRAPH <{{iri}}> { <{{iri}}> qa:importsArchived ?o . } }"
+  template="table">
+</semantic-query>
