@@ -147,7 +147,7 @@ sh:OntologyShouldNotImportArchivedOntology
 
       SELECT ?this WHERE {
       #  GRAPH ?gA { 
-    ?this a owl:Ontology ; owl:imports ?o .
+    ?this a owl:Ontology #; owl:imports ?o .
     #}
         #GRAPH ?gB { ?o bibo:status pso:archived . }
       }
