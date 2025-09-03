@@ -115,3 +115,20 @@ sh:OntologiesAndVocabulariesCannotExistTogether
     sh:message "Cannot mix Ontology and Vocabulary data - both skos:ConceptScheme and owl:Ontology resources exist in this Ontology." ;
     sh:description "Ensures owl:Ontology and skos:ConceptScheme are not both defined in an Ontology" .
 
+#Warns if an ontology does not import an archived ontology
+sh:OntologyShouldNotImportArchivedOntology
+    a sh:NodeShape ;
+    sh:targetClass owl:Ontology ;
+    sh:sparql [
+      sh:select """
+     SELECT $this ?o WHERE {
+  #GRAPH ?gA { $this owl:imports ?o . }
+  GRAPH ?gB { ?o  <http://purl.org/ontology/bibo/status>
+                    <http://purl.org/spar/pso/archived> . }
+}
+        """;
+    ];
+    sh:severity sh:Warning ;
+    sh:message "Import of archived ontology:  <{$this}> imports an archived ontology {?o}." ;
+    sh:description "the ontology does import an archived ontology" .
+
