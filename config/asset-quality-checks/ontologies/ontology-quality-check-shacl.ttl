@@ -121,14 +121,11 @@ sh:OntologyShouldNotImportArchivedOntology
     sh:targetClass owl:Ontology ;
     sh:sparql [
       sh:select """
-       SELECT $this ?o WHERE {
-          GRAPH $this {              # triples about the importing ontology live in its graph
-            $this owl:imports ?o .
-          }
-          GRAPH ?o {                 # triples about the imported ontology live in its graph
-            ?o bibo:status pso:archived .
-          }
-      }
+     SELECT $this ?o WHERE {
+  GRAPH ?gA { $this owl:imports ?o . }
+  GRAPH ?gB { ?o  <http://purl.org/ontology/bibo/status>
+                    <http://purl.org/spar/pso/archived> . }
+}
         """;
     ];
     sh:severity sh:Warning ;
