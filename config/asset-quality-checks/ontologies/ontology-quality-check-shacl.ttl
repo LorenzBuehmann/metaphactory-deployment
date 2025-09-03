@@ -123,6 +123,7 @@ sh:OntologyShouldNotImportArchivedOntology
       sh:select """
             select $this ?o where {
       $this owl:imports ?o .
+      ?o <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/archived> .
   #     graph ?g1 {
   #    				?a owl:imports ?o .
             
@@ -136,5 +137,5 @@ sh:OntologyShouldNotImportArchivedOntology
         """;
     ];
     sh:severity sh:Warning ;
-    sh:message "Import of archived ontology: {$this} imports an archived ontology {?o}." ;
+    sh:message "Import of archived ontology:  <{$this}> imports an archived ontology {?o}." ;
     sh:description "the ontology does import an archived ontology" .
