@@ -114,3 +114,19 @@ sh:OntologiesAndVocabulariesCannotExistTogether
     sh:severity sh:Violation ;
     sh:message "Cannot mix Ontology and Vocabulary data - both skos:ConceptScheme and owl:Ontology resources exist in this Ontology." ;
     sh:description "Ensures owl:Ontology and skos:ConceptScheme are not both defined in an Ontology" .
+
+sh:OntologyShouldNotImportArchivedOntology
+    a sh:NodeShape ;
+    sh:targetClass owl:Ontology ;
+    sh:sparql [
+      sh:select """
+        SELECT $this ?o WHERE {
+          $this owl:imports ?o .
+          $this <http://example.org/qa/importsArchived> ?o .
+        }
+      """ ;
+    ] ;
+    sh:severity sh:Warning ;
+    sh:message "Import of archived ontology: <{$this}> imports an archived ontology {?o}." ;
+    sh:description "The ontology imports at least one archived ontology." .
+
