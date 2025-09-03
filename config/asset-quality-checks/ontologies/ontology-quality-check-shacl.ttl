@@ -146,7 +146,9 @@ sh:OntologyShouldNotImportArchivedOntology
       PREFIX pso:  <http://purl.org/spar/pso/>
 
       SELECT ?this WHERE {
-        GRAPH ?gA { ?this a owl:Ontology ; owl:imports ?o . }
+      #  GRAPH ?gA { 
+    ?this a owl:Ontology ; owl:imports ?o .
+    #}
         #GRAPH ?gB { ?o bibo:status pso:archived . }
       }
     """
