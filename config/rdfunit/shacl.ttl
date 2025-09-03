@@ -33,7 +33,7 @@ rules:NoLabelForTypedEntities
 		sh:message "No rdfs:label for typed entity." 
 	] .
 
-sh:OntologyShouldNotImportArchivedOntology
+rules:OntologyShouldNotImportArchivedOntology
     a sh:NodeShape ;
     sh:targetClass owl:Ontology ;
     sh:sparql [
