@@ -132,3 +132,29 @@ sh:OntologyShouldNotImportArchivedOntology
     sh:message "Import of archived ontology:  <{$this}> imports an archived ontology {?o}." ;
     sh:description "the ontology does import an archived ontology" .
 
+:OntologyShouldNotImportArchivedOntology2
+  a sh:NodeShape ;
+  sh:severity sh:Warning ;
+  sh:message "Ontology {$this} imports archived ontology." ;
+
+  # 1) Compute violating ontologies across graphs
+  sh:target [
+    a sh:SPARQLTarget ;
+    sh:select """
+      PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+      PREFIX bibo: <http://purl.org/ontology/bibo/>
+      PREFIX pso:  <http://purl.org/spar/pso/>
+
+      SELECT ?this WHERE {
+        GRAPH ?gA { 
+    ?this a owl:Ontology ; owl:imports ?o .
+    }
+        GRAPH ?gB { ?o <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/archived> . }
+      }
+    """
+  ] ;
+
+  # 2) Trivial constraint: for each focus node, emit one result
+  sh:sparql [
+    sh:select "SELECT $this WHERE { }"
+  ] .
