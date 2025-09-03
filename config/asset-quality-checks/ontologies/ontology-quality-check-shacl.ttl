@@ -122,7 +122,7 @@ sh:OntologyShouldNotImportArchivedOntology
     sh:sparql [
       sh:select """
      SELECT $this ?o WHERE {
-  GRAPH ?gA { $this owl:imports ?o . }
+  #GRAPH ?gA { $this owl:imports ?o . }
   GRAPH ?gB { ?o  <http://purl.org/ontology/bibo/status>
                     <http://purl.org/spar/pso/archived> . }
 }
