@@ -1,7 +1,5 @@
-<!-- apps/<your-app>/templates/ontology-qa.html -->
-
 <h2>Validate imports against archived ontologies</h2>
-<p>Ontology: <code>{{iri}}</code></p>
+<p>Ontology: <code>{{{resource}}}</code></p>
 
 <button id="recomputeAndValidate" class="btn btn-primary">
   Recompute “importsArchived” & run Data Quality
@@ -10,7 +8,7 @@
 <!-- 1) Button click → run the SPARQL UPDATE -->
 <mp-event-proxy
   on-event-source="recomputeAndValidate"
-  on-event-type="_click"
+  on-event-type="click"
   proxy-event-type="SemanticUpdate.Execute"
   proxy-targets='["update-archived-helpers"]'>
 </mp-event-proxy>
@@ -20,17 +18,17 @@
   id="update-archived-helpers"
   show-confirmation="false"
   redirect="event"
-  query="
+  update="
 PREFIX owl:  <http://www.w3.org/2002/07/owl#>
 PREFIX bibo: <http://purl.org/ontology/bibo/>
 PREFIX pso:  <http://purl.org/spar/pso/>
 PREFIX qa:   <urn:qa:>
 
-# Assumes graph IRI == ontology IRI. Adjust ?g if your graph naming differs.
-DELETE { GRAPH ?g { <{{iri}}> qa:importsArchived ?o . } }
-INSERT { GRAPH ?g { <{{iri}}> qa:importsArchived ?o . } }
+# Assumes graph IRI == ontology IRI. If not, bind ?g differently (see note below).
+DELETE { GRAPH ?g { <{{{resource}}}> qa:importsArchived ?o . } }
+INSERT { GRAPH ?g { <{{{resource}}}> qa:importsArchived ?o . } }
 WHERE  {
-  BIND(IRI('{{iri}}') AS ?this)
+  BIND(IRI('{{{resource}}}') AS ?this)
   BIND(?this AS ?g)
   GRAPH ?g { ?this a owl:Ontology ; owl:imports ?o . }
   GRAPH ?o { ?o bibo:status pso:archived . }
@@ -48,8 +46,8 @@ WHERE  {
         'X-Requested-With': 'XMLHttpRequest'
       },
       body: JSON.stringify({
-        configurationId: 'ontologies-checks',
-        scope: { semanticContext: 'ontologies-union' },
+        configurationId: 'ontologies-checks',     // ← adjust to your Data Quality config id
+        scope: { semanticContext: 'ontologies-union' }, // ← adjust to your context name
         labels: { resource: iri }
       })
     });
@@ -57,16 +55,16 @@ WHERE  {
     return res.json();
   }
 
-  // Wire the chain: UPDATE success → run DQ
-  addEventListener('SemanticUpdate.Success', async (e) => {
+  // Chain: UPDATE success → run DQ
+  addEventListener('SemanticUpdate.Success', async () => {
     try {
-      const iri = '{{iri}}';
+      const iri = '{{{resource}}}';
       const job = await runDQ(iri);
       console.log('Data Quality run started:', job);
       alert('Helper triples rebuilt and Data Quality run started.');
     } catch (err) {
       console.error(err);
-      alert('Failed to start Data Quality: ' + err.message);
+      alert('Failed to start Data Quality: ' + (err.message || err));
     }
   });
 
@@ -81,6 +79,14 @@ WHERE  {
   id="qa-check"
   query="
 PREFIX qa: <urn:qa:>
-SELECT ?o WHERE { GRAPH <{{iri}}> { <{{iri}}> qa:importsArchived ?o . } }"
+SELECT ?o WHERE { GRAPH <{{{resource}}}> { <{{{resource}}}> qa:importsArchived ?o . } }"
   template="table">
 </semantic-query>
+
+<!-- Refresh the table after the UPDATE -->
+<mp-event-proxy
+  on-event-source="update-archived-helpers"
+  on-event-type="SemanticUpdate.Success"
+  proxy-event-type="Component.Refresh"
+  proxy-targets='["qa-check"]'>
+</mp-event-proxy>
