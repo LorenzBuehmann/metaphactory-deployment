@@ -123,7 +123,7 @@ sh:asdf
       sh:select """
             select ?a where {
       				?a owl:imports ?o .
-              ?o <http://purl.org/ontology/bibo/status> ?s .
+              #?o <http://purl.org/ontology/bibo/status> ?s .
             }
         """;
     ];
