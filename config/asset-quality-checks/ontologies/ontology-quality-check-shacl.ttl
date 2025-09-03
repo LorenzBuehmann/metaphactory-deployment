@@ -115,7 +115,7 @@ sh:OntologiesAndVocabulariesCannotExistTogether
     sh:message "Cannot mix Ontology and Vocabulary data - both skos:ConceptScheme and owl:Ontology resources exist in this Ontology." ;
     sh:description "Ensures owl:Ontology and skos:ConceptScheme are not both defined in an Ontology" .
 
-#Ensures Ontology and Vocabulary (owl:Ontology and skos:ConceptScheme) data cannot exist together in the same graph
+#Warns if an ontology does not import an archived ontology
 sh:asdf
     a sh:NodeShape ;
     sh:targetClass owl:Ontology ;
@@ -135,5 +135,5 @@ sh:asdf
         """;
     ];
     sh:severity sh:Warning ;
-    sh:message "owl imports" ;
-    sh:description "blub" .
+    sh:message "import of archived ontology" ;
+    sh:description "the ontology does import an archived ontology" .
