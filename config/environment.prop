@@ -1,1 +1,2 @@
 shiroSessionTimeoutSecs = 18000
+platformBaseIri = http://data.test.org/
