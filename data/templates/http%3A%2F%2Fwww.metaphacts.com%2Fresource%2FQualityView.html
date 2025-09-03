@@ -1,0 +1,53 @@
+<!-- 1) Your ontology editor -->
+<ontology-editor id="ontEditor" resource="{{iri}}"></ontology-editor>
+
+<!-- 2) When the editor saves successfully, trigger the UPDATE -->
+<mp-event-proxy
+  on-event-source="ontEditor"
+  on-event-type="OntologyEditor.PersistSuccessful"
+  proxy-event-type="SemanticUpdate.Execute"
+  proxy-targets='["update-archived-helpers"]'>
+</mp-event-proxy>
+
+<!-- 3) SPARQL UPDATE: recompute qa:importsArchived for THIS ontology only -->
+<semantic-update
+  id="update-archived-helpers"
+  show-confirmation="false"
+  redirect="event"            <!-- emit SemanticUpdate.Success / .Failed events -->
+  update="
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX bibo: <http://purl.org/ontology/bibo/>
+PREFIX pso:  <http://purl.org/spar/pso/>
+PREFIX qa:   <urn:qa:>
+
+# Expect the editor to pass the ontology IRI in the event payload as {{detail.resource}}
+# (Some versions use {{detail.iri}} — inspect your event detail and adjust.)
+DELETE { GRAPH ?g { ?this qa:importsArchived ?o . } }
+INSERT { GRAPH ?g { ?this qa:importsArchived ?o . } }
+WHERE  {
+  BIND(IRI('{{detail.resource}}') AS ?this)
+  BIND(?this AS ?g)  # common convention: graph IRI == ontology IRI
+  GRAPH ?g { ?this a owl:Ontology ; owl:imports ?o . }
+  GRAPH ?o { ?o bibo:status pso:archived . }
+}">
+</semantic-update>
+
+<!-- 4) After UPDATE success, kick off a Data Quality run via REST -->
+<mp-event-proxy
+  on-event-source="update-archived-helpers"
+  on-event-type="SemanticUpdate.Success"
+  proxy-event-type="Form.Persist"            <!-- fire a REST call -->
+  proxy-targets='["dq-run"]'>
+</mp-event-proxy>
+
+<!-- 5) REST call to Data Quality (adjust URL & payload to your config) -->
+<semantic-form-rest-persistence
+  id="dq-run"
+  method="POST"
+  url="/rest/jobs/data-quality/run"
+  payload='{
+    "configurationId": "ontologies-checks",    /* your Data Quality config ID */
+    "scope": { "semanticContext": "ontologies-union" },
+    "labels": { "resource": "{{detail.resource}}" }
+  }'>
+</semantic-form-rest-persistence>
