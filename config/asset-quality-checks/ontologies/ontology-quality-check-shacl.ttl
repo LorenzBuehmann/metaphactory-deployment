@@ -116,19 +116,20 @@ sh:OntologiesAndVocabulariesCannotExistTogether
     sh:description "Ensures owl:Ontology and skos:ConceptScheme are not both defined in an Ontology" .
 
 #Warns if an ontology does not import an archived ontology
-sh:asdf
+sh:OntologyShouldNotImportArchivedOntology
     a sh:NodeShape ;
     sh:targetClass owl:Ontology ;
     sh:sparql [
       sh:select """
             select ?a where {
+      $this owl:imports ?o .
   #     graph ?g1 {
   #    				?a owl:imports ?o .
             
   #}
-  graph ?g2 {
-    ?o <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/archived> .
-  }
+ # graph ?g2 {
+ #   ?o <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/archived> .
+ # }
       				#?a owl:imports ?o .
               #?o <http://purl.org/ontology/bibo/status> ?s .
             }
