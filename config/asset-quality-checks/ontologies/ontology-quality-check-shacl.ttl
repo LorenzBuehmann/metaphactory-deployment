@@ -126,9 +126,9 @@ sh:asdf
       				?a owl:imports ?o .
             
   }
-  #graph ?g2 {
-  #  ?o <http://purl.org/ontology/bibo/status> ?s .
-  #}
+  graph ?g2 {
+    ?o <http://purl.org/ontology/bibo/status> ?s .
+  }
       				#?a owl:imports ?o .
               #?o <http://purl.org/ontology/bibo/status> ?s .
             }
