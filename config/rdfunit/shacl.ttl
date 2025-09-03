@@ -1,0 +1,55 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix mpqa: <http://www.metaphacts.com/ontologies/qa#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rules: <http://www.metaphacts.com/instances/qaRules#> .
+
+# example of rule that uses inline query, that get all resources that don't
+# have rdfs:label
+rules:NoLabelForTypedEntitiesQuery
+	a sh:NodeShape ;
+	sh:targetSubjectsOf rdf:type ;
+	sh:sparql [
+		a sh:SPARQLConstraint ;
+		sh:message """No rdfs:label for typed entity (query).""" ;
+		sh:severity sh:Error ;
+		sh:select """
+			SELECT DISTINCT ?this (?this AS ?value) {
+				FILTER(NOT EXISTS { ?this <http://www.w3.org/2000/01/rdf-schema#label> ?label . })
+			}
+			"""
+		] .
+
+# example of simple SHACL rule, that looks for typed entities
+# that don't have at least one rdfs:label
+rules:NoLabelForTypedEntities
+	a sh:NodeShape ;
+	sh:targetSubjectsOf rdf:type ;
+	sh:property [
+		# all nested shapes should have explicit IRI, please don't use blank nodes
+		sh:path rdfs:label ;
+		sh:minCount 1 ;
+		sh:message "No rdfs:label for typed entity." 
+	] .
+
+sh:OntologyShouldNotImportArchivedOntology
+    a sh:NodeShape ;
+    sh:targetClass owl:Ontology ;
+    sh:sparql [
+      sh:select """
+     SELECT $this ?o WHERE {
+  #GRAPH ?gA { $this owl:imports ?o . }
+  GRAPH ?gB { ?o  <http://purl.org/ontology/bibo/status>
+                    <http://purl.org/spar/pso/archived> . }
+}
+        """;
+    ];
+    sh:severity sh:Warning ;
+    sh:message "Import of archived ontology:  <{$this}> imports an archived ontology {?o}." ;
+    sh:description "the ontology does import an archived ontology" .
+
+# Instead of defining shapes here directly, you can also import SHACL shapes
+# via their ontology asset IRI:
+#
+# rules:importedShapes owl:imports <http://example.org/my-ontology> . 
