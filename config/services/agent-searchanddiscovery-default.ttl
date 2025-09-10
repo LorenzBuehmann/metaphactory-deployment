@@ -1,28 +1,13 @@
+@prefix agent: <http://www.metaphacts.com/ontologies/platform/service/config/ai/agent/> .
+@prefix ai-service-config: <http://www.metaphacts.com/ontologies/platform/service/config/ai/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix service-config: <http://www.metaphacts.com/ontologies/platform/service/config/> .
-@prefix ai-service-config: <http://www.metaphacts.com/ontologies/platform/service/config/ai/> .
-@prefix agent: <http://www.metaphacts.com/ontologies/platform/service/config/ai/agent/> .
 @prefix tool: <http://www.metaphacts.com/ontologies/platform/service/config/ai/tool/> .
 
-<urn:service:agent-searchanddiscovery-default> a service-config:Service, ai-service-config:ConversationAgent ;
-    rdfs:label "Default Search & Discovery Agent" ;
-    service-config:config [
-
-        # language model powering the agent (to be defined as a separate service)
-        agent:languageModel <urn:service:languagemodel-default> ;
-
-        # the context ontology is provided to the agent during entity linking and SPARQL translation
-        agent:contextOntology <https://ontologies.example.com/my-ontology/0.1> ;
-
-        # The maximum number of retries for the agent to generate a response.
-        # If retryLimit is set, the response of the agent is validated w.r.t. its structure and syntax;
-        # for an invalid response, the agent will retry to regenerate it using the validation feedback.
-        # If retryLimit is not set, the response of the agent is passed through without validation.
-        agent:retryLimit 2 ;
-
-        # The context instructions should provide information about the environment the LLM is operating in.
-        # This includes the context around the conversation and the available resources to answer requests.
-        agent:contextInstructions """
+<urn:service:agent-searchanddiscovery-default> a service-config:Service, ai-service-config:ConversationAgent;
+  service-config:config [
+      agent:contextInstructions """
             - You are operating in an environment with access to knowledge graphs that are based on open standards like RDF, OWL, and SPARQL.
             - You have access to tools that can be used to retrieve information from knowledge graphs and potentially other data sources.
             - You can use the tools to retrieve information about entities, relationships, and other relevant information.
@@ -30,11 +15,11 @@
             - Users can upload text files along with their requests. The contents of these files will appear directly in the user message, enclosed within <file> tags.
             Each <file> tag also includes a name attribute that indicates the original filename.
             Use both the file content and the filename (when relevant) to inform your response.
-            """ ;
-
-        # The task instructions clearly define the task of the LLM and the role it plays in the conversation.
-        # They may contain guidelines of how to answer user requests and what information to provide.
-        agent:taskInstructions """
+            """;
+      agent:contextOntology <https://ontologies.example.com/my-ontology/0.1>;
+      agent:languageModel <urn:service:languagemodel-ollama>;
+      agent:retryLimit "2"^^<http://www.w3.org/2001/XMLSchema#int>;
+      agent:taskInstructions """
             You are a helpful assistant developed by metaphacts GmbH. STRICTLY adhere to the following instructions:
             - Your response must be concise and to the point.
             - Your response must include only information that is immediately relevant to answer the user request.
@@ -46,28 +31,33 @@
             - Your response should contain as much information as possible (especially entities) that you used to derive the answer.
             - Use only entity IRIs that are provided by the user or from tools. Never use dummy IRIs or IRIs which you have learned during pre-training. Never use PREFIX <http://example.org/> in real tasks, and pay attention to the PREFIXes used in the context ontology.
             - If you have multiple likely candidates for an entity let the user decide before answering the request. Use the `describe_entity` tool to provide details about each candidate.
-            """ ;
-
-        # configuration for the Entity Linking tool of the agent
-        agent:toolConfig [
-            a tool:EntityLinkingTool ;
-
-            # language model powering the tool (optional; by default, the language model of the agent is used)
-            #tool:languageModel <urn:service:languagemodel-default> ;
-
-            # Instructions for entity detection injected into the prompt of the LLM.
-            tool:taskInstructions """
-                - Extract named entities from the request provided below # REQUEST #.
-                - Only extract entities that may be instances of the types defined in the OWL ontology provided below # ONTOLOGY #.
-                - Do not extract mentions of types, numbers or dates.
-                - Assign all relevant candidate types to the named entities using only types from the OWL ontology.
-                - Omit the candidate types if you are unsure.
-                """ ;
-
-            # Examples for entity detection injected into the prompt of the LLM.
-            # These examples should be tailored to your context ontology and the expected user requests.
-            # (for the concrete examples here, we assume that schema.org is passed as context ontology to assign candidate types)
-            tool:examples """
+            """;
+      agent:toolConfig [ a tool:DescribeEntityTool;
+          tool:failForUnknownEntity true;
+          tool:limit "10"^^<http://www.w3.org/2001/XMLSchema#int>
+        ], [ a tool:SPARQLQueryExecutionTool;
+          tool:limit "10"^^<http://www.w3.org/2001/XMLSchema#int>
+        ], [ a tool:ChartConfigurationTool;
+          tool:taskInstructions """
+                - Generate a configuration for a component that visualizes data as a chart.
+                - Examples of chart configurations are provided below # EXAMPLES #.
+                - The original user request is provided below # REQUEST #.
+                - The SPARQL query returning the data for the chart is provided below # QUERY #.
+                """
+        ], [ a tool:KeywordSearchTool;
+          tool:limit "10"^^<http://www.w3.org/2001/XMLSchema#int>
+        ], [ a tool:SPARQLTranslationTool;
+          tool:failForUnknownEntity true;
+          tool:failForUnknownType true;
+          tool:taskInstructions """
+                - Generate a SPARQL query that retrieves exactly the information requested in the request provided below # REQUEST #.
+                - Use the IRIs of the detected entities in the query which are provided below # ENTITIES #.
+                - Use only the OWL ontology as a model for the query which is provided below # ONTOLOGY #.
+                - Use the namespaces declared in the ontology and omit namespace declarations in the query.
+                - Use only classes and properties of the ontology that are relevant to the request.
+                """
+        ], [ a tool:EntityLinkingTool;
+          tool:examples """
                 Example 1.
                 Request: Find researchers working on torque monitoring
                 Response: {\"mentions\": [
@@ -94,108 +84,15 @@
                 Response: {\"mentions\": [
                     {\"text\": \"Amyloid-beta precursor protein\", \"candidateTypes\": [\"http://www.w3.org/2004/02/skos/core#Concept\", \"https://schema.org/MedicalCondition\"]}
                 ]}
-                """ ;
-
-            # Upper limit of entity candidates returned by the Entity Lookup service.
-            tool:limit 3 ;
-
-            # Custom search service for entities (optional; uses the lookup of the default repository if not set)
-            #tool:searchServiceName "custom-search-service" ;
-        ] ;
-
-        # configuration for the SPARQL Translation tool of the agent
-        agent:toolConfig [
-            a tool:SPARQLTranslationTool ;
-
-            # language model powering the tool (optional; by default, the language model of the agent is used)
-            #tool:languageModel <urn:service:languagemodel-default> ;
-
-            # If enabled, the tool accepts only entity types that are used in at least one triple (in subject or object position).
-            # In case an unused type is provided, the tool will refuse to generate a query and return a corresponding error message to the Conversational AI.
-            tool:failForUnknownType true ;
-
-            # If enabled, the tool accepts only entities that are used in at least one triple (in subject or object position).
-            # In case an unused entity is provided, the tool will refuse to generate a query and return a corresponding error message to the Conversational AI.
-            tool:failForUnknownEntity true ;
-
-            # Task instructions for SPARQL translation injected into the prompt of the LLM.
-            tool:taskInstructions """
-                - Generate a SPARQL query that retrieves exactly the information requested in the request provided below # REQUEST #.
-                - Use the IRIs of the detected entities in the query which are provided below # ENTITIES #.
-                - Use only the OWL ontology as a model for the query which is provided below # ONTOLOGY #.
-                - Use the namespaces declared in the ontology and omit namespace declarations in the query.
-                - Use only classes and properties of the ontology that are relevant to the request.
-                """ ;
-
-            # Examples for SPARQL translation injected into the prompt of the LLM (optional; typically not necessary).
-            #tool:examples "";
-
-            # The maximum number of retries for the tool to generate a response.
-            # If retryLimit is set, the generated query is validated w.r.t. its syntax and accordance to the context ontology;
-            # for an invalid query, the agent will retry to generate a query considering the validation feedback.
-            # If retryLimit is not set, the generated query is passed through without validation.
-            # Caution: only enable retryLimit if your context ontology is well defined and you expect all generated queries to strictly adhere to it.
-            #tool:retryLimit 2;
-        ] ;
-
-        # configuration for the SPARQL Execution tool of the agent
-        agent:toolConfig [
-            a tool:SPARQLQueryExecutionTool ;
-
-            # Upper limit of results returned by the executed SPARQL SELECT query.
-            tool:limit 10 ;
-        ] ;
-
-        agent:toolConfig [
-            a tool:DescribeEntityTool ;
-
-            # If enabled, the tool accepts only entities that are used in at least one triple (in subject or object position).
-            # In case an unused entity is provided, the tool will refuse to generate a query and return a corresponding error message to the Conversational AI.
-            tool:failForUnknownEntity true ;
-
-            # Upper limit of triples returned to describe the entity.
-            tool:limit 10 ;
-        ] ;
-
-        # configuration for the Keyword Search tool of the agent
-        agent:toolConfig [
-            a tool:KeywordSearchTool ;
-
-            # Upper limit of entity candidates returned by the search.
-            tool:limit 10 ;
-
-            # Restrict retrieval to these candidate types (multiple may be provided). By default, all types are considered.
-            #tool:candidateType <http://www.w3.org/2004/02/skos/core#Concept> ;
-        ] ;
-
-        # configuration for the GraphDB Similarity Search tool of the agent
-        # (may serve as an embedding-based replacement for the Keyword Search tool, if GraphDB is used)
-        #agent:toolConfig [
-        #    a tool:GraphDBSimilaritySearchTool ;
-        #
-        #    # Upper limit of entity candidates returned by the search.
-        #    tool:limit 10 ;
-        #
-        #    # Lower limit for the similarity score of candidate entities.
-        #    tool:minScore 0.6 ;
-        #
-        #    # Name of the similarity index configured in GraphDB.
-        #    tool:indexName "similarity-index" ;
-        #] ;
-
-        # configuration for the Chart Configuration tool of the agent
-        agent:toolConfig [
-            a tool:ChartConfigurationTool ;
-
-            # language model powering the tool (optional; by default, the language model of the agent is used)
-            #tool:languageModel <urn:service:languagemodel-default> ;
-
-            # Task instructions for the generation of the chart configuration injected into the prompt of the LLM.
-            tool:taskInstructions """
-                - Generate a configuration for a component that visualizes data as a chart.
-                - Examples of chart configurations are provided below # EXAMPLES #.
-                - The original user request is provided below # REQUEST #.
-                - The SPARQL query returning the data for the chart is provided below # QUERY #.
-                """ ;
-        ] ;
-  ] .
+                """;
+          tool:limit "3"^^<http://www.w3.org/2001/XMLSchema#int>;
+          tool:taskInstructions """
+                - Extract named entities from the request provided below # REQUEST #.
+                - Only extract entities that may be instances of the types defined in the OWL ontology provided below # ONTOLOGY #.
+                - Do not extract mentions of types, numbers or dates.
+                - Assign all relevant candidate types to the named entities using only types from the OWL ontology.
+                - Omit the candidate types if you are unsure.
+                """
+        ]
+    ];
+  rdfs:label "Default Search & Discovery Agent" .
