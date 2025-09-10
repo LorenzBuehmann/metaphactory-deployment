@@ -1,0 +1,29 @@
+<mp-conversational-ai id="conversation-ai-test" placeholder="Talk to the Search & Discovery Agent..." prompt-suggestion-template="{{> tmpl}}" default-conversation-agent-iri="urn:service:agent-searchanddiscovery-default" options='{"explanationOptions": {"showExplanation": true}}'>
+  <template id="tmpl">
+    <div class="suggestion-prompt-cards">
+      <div data-flex-layout="rows stretch-stretch">
+        {{#bind
+        example-questions=(array-of
+        "Your example question one"
+        "Your example question two"
+        )}}
+
+          {{#each example-questions}}
+            <div data-flex-self="size-1of5 md-half sm-full" class="suggestion-prompt-card-items">
+              <mp-event-trigger targets='["conversation-ai-test"]' type="ConversationalAI.Start" data='{"prompt": "{{this}}"}'>
+                <button type="button" class="btn btn-secondary suggestion-prompt-card">
+                  <span class="suggestion-prompt-thumbnail">
+                    <span class="material-symbols-outlined">
+                      lightbulb_circle
+                    </span>
+                  </span>
+                  <span class="suggestion-prompt-text">{{this}}</span>
+                </button>
+              </mp-event-trigger>
+            </div>
+          {{/each}}
+        {{/bind}}
+      </div>
+    </div>
+  </template>
+</mp-conversational-ai>
