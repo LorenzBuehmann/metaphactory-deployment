@@ -1,0 +1,20 @@
+@prefix : <http://ontologies.metaphacts.com/test-import-ont/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix vaem: <http://www.linkedmodel.org/1.2/schema/vaem#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:0.1 a owl:Ontology;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-10-12T13:27:03.951Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-10-12T13:27:03.951Z"^^xsd:dateTime;
+  dct:title "TestImportOnt"@en;
+  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
+  vaem:namespace "http://ontologies.metaphacts.com/test-import-ont/"^^xsd:anyURI;
+  rdfs:label "TestImportOnt"@en;
+  owl:versionInfo "0.1" .
