@@ -12,9 +12,18 @@
   dct:contributor "admin";
   dct:created "2025-10-12T13:26:02.634Z"^^xsd:dateTime;
   dct:creator "admin";
-  dct:modified "2025-10-12T13:26:02.634Z"^^xsd:dateTime;
+  dct:modified "2025-10-12T13:27:57.066Z"^^xsd:dateTime;
   dct:title "TestBaseOnt"@en;
-  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
+  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/published>;
   vaem:namespace "http://ontologies.metaphacts.com/test-base-ont/"^^xsd:anyURI;
   rdfs:label "TestBaseOnt"@en;
   owl:versionInfo "0.1" .
+
+:A1 a owl:Class;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-10-12T13:27:57.066Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-10-12T13:27:57.066Z"^^xsd:dateTime;
+  rdfs:isDefinedBy :0.1;
+  rdfs:label "A1"@en .
