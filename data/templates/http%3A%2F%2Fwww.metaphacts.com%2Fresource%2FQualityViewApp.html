@@ -1,0 +1,32 @@
+<section class="card">
+  <h3>Refresh archived-import markers</h3>
+  <p>For the ontology: <code>{{page-urlParam "iri"}}</code></p>
+
+  <semantic-update
+    show-confirmation="true"
+    confirmation-options='{"confirmLabel":"Recompute now","cancelLabel":"Cancel"}'
+    query='
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX bibo: <http://purl.org/ontology/bibo/>
+PREFIX pso:  <http://purl.org/spar/pso/>
+PREFIX qa:   <http://example.org/qa/>
+
+DELETE { GRAPH ?g { <{{iri}}> qa:importsArchived ?old . } }
+INSERT { GRAPH ?g { <{{iri}}> qa:importsArchived ?o . } }
+WHERE {
+  GRAPH ?g { <{{iri}}> a owl:Ontology . }
+  GRAPH ?g { <{{iri}}> owl:imports ?cand . }
+  ?cand bibo:status pso:archived .
+  BIND(?cand AS ?o)
+  OPTIONAL { GRAPH ?g { <{{iri}}> qa:importsArchived ?old . } }
+}
+'>
+  </semantic-update>
+
+  <button onclick="this.previousElementSibling.execute()">Recompute now</button>
+</section>
+
+<style>
+  .card { border:1px solid #ddd; border-radius:6px; padding:12px; max-width:860px }
+  code { background:#f6f8fa; padding:2px 4px; border-radius:4px }
+</style>

@@ -8,13 +8,13 @@
 @prefix ephedra: <http://www.metaphacts.com/ontologies/platform/ephedra#> .
 
 [] a config:Repository;
-  config:rep.id "default";
+  config:rep.id "shacl-enabled";
   rdfs:label "GraphDB repository";
   config:rep.impl [
       config:rep.type "metaphactory:GraphDBRepository";
-      config:http.url <http://graphdb:7200/repositories/metaphactory>;
+      config:http.url <http://graphdb:7200/repositories/metaphactory2>;
       mph:username "admin";
-      mph:password "root"
+      mph:password "****"
     ];
   search:configuration [
       search:type "metaphacts:graphdbSearch";

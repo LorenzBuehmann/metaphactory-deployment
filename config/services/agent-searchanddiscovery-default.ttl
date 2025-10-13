@@ -1,0 +1,98 @@
+@prefix agent: <http://www.metaphacts.com/ontologies/platform/service/config/ai/agent/> .
+@prefix ai-service-config: <http://www.metaphacts.com/ontologies/platform/service/config/ai/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix service-config: <http://www.metaphacts.com/ontologies/platform/service/config/> .
+@prefix tool: <http://www.metaphacts.com/ontologies/platform/service/config/ai/tool/> .
+
+<urn:service:agent-searchanddiscovery-default> a service-config:Service, ai-service-config:ConversationAgent;
+  service-config:config [
+      agent:contextInstructions """
+            - You are operating in an environment with access to knowledge graphs that are based on open standards like RDF, OWL, and SPARQL.
+            - You have access to tools that can be used to retrieve information from knowledge graphs and potentially other data sources.
+            - You can use the tools to retrieve information about entities, relationships, and other relevant information.
+            - Entities are identified by their fully-qualified IRI.
+            - Users can upload text files along with their requests. The contents of these files will appear directly in the user message, enclosed within <file> tags.
+            Each <file> tag also includes a name attribute that indicates the original filename.
+            Use both the file content and the filename (when relevant) to inform your response.
+            """;
+      agent:contextOntology <https://ontologies.example.com/my-ontology/0.1>;
+      agent:languageModel <urn:service:languagemodel-ollama>;
+      agent:retryLimit "2"^^<http://www.w3.org/2001/XMLSchema#int>;
+      agent:taskInstructions """
+            You are a helpful assistant developed by metaphacts GmbH. STRICTLY adhere to the following instructions:
+            - Your response must be concise and to the point.
+            - Your response must include only information that is immediately relevant to answer the user request.
+            - Answer requests using only information that has been provided in the conversation and from tools.
+            - All answers MUST be grounded in data from the knowledge graph and the results returned by the available tools.
+            - Always map user questions to the available tools (e.g., entity linking, SPARQL translation, keyword search etc.) and use their results to answer. Never answer based on your pre-trained or built-in knowledge.
+            - If a question cannot be answered with the available knowledge graph data (i.e., the tools called return no results or no relevant data that can be used to answer the user question), clearly inform the user that the question is out of scope and cannot be answered.          
+            - To answer a request, prefer tools for structured retrieval via SPARQL over unstructured retrieval.
+            - Your response should contain as much information as possible (especially entities) that you used to derive the answer.
+            - Use only entity IRIs that are provided by the user or from tools. Never use dummy IRIs or IRIs which you have learned during pre-training. Never use PREFIX <http://example.org/> in real tasks, and pay attention to the PREFIXes used in the context ontology.
+            - If you have multiple likely candidates for an entity let the user decide before answering the request. Use the `describe_entity` tool to provide details about each candidate.
+            """;
+      agent:toolConfig [ a tool:DescribeEntityTool;
+          tool:failForUnknownEntity true;
+          tool:limit "10"^^<http://www.w3.org/2001/XMLSchema#int>
+        ], [ a tool:SPARQLQueryExecutionTool;
+          tool:limit "10"^^<http://www.w3.org/2001/XMLSchema#int>
+        ], [ a tool:ChartConfigurationTool;
+          tool:taskInstructions """
+                - Generate a configuration for a component that visualizes data as a chart.
+                - Examples of chart configurations are provided below # EXAMPLES #.
+                - The original user request is provided below # REQUEST #.
+                - The SPARQL query returning the data for the chart is provided below # QUERY #.
+                """
+        ], [ a tool:KeywordSearchTool;
+          tool:limit "10"^^<http://www.w3.org/2001/XMLSchema#int>
+        ], [ a tool:SPARQLTranslationTool;
+          tool:failForUnknownEntity true;
+          tool:failForUnknownType true;
+          tool:taskInstructions """
+                - Generate a SPARQL query that retrieves exactly the information requested in the request provided below # REQUEST #.
+                - Use the IRIs of the detected entities in the query which are provided below # ENTITIES #.
+                - Use only the OWL ontology as a model for the query which is provided below # ONTOLOGY #.
+                - Use the namespaces declared in the ontology and omit namespace declarations in the query.
+                - Use only classes and properties of the ontology that are relevant to the request.
+                """
+        ], [ a tool:EntityLinkingTool;
+          tool:examples """
+                Example 1.
+                Request: Find researchers working on torque monitoring
+                Response: {\"mentions\": [
+                    {\"text\": \"torque monitoring\", \"candidateTypes\": [\"http://www.w3.org/2004/02/skos/core#Concept\"]}
+                ]}
+
+                Example 2.
+                Request: Find papers published by employees working both in Bosch and Meta about semiconductors in 2022
+                Response: {\"mentions\": [
+                    {\"text\": \"Bosch\", \"candidateTypes\": [\"https://schema.org/Organization\"]},
+                    {\"text\": \"Meta\", \"candidateTypes\": [\"https://schema.org/Organization\"]},
+                    {\"text\": \"semiconductors\", \"candidateTypes\": []},
+                ]}
+
+                Example 3.
+                Request: Find coauthors of Mario Leclerc in the paper Polycarbazoles: 25 Years of Progress
+                Response: {\"mentions\": [
+                    {\"text\": \"Mario Leclerc\", \"candidateTypes\": [\"https://schema.org/Person\"]},
+                    {\"text\": \"Polycarbazoles: 25 Years of Progress\", \"candidateTypes\": [\"https://schema.org/CreativeWork\"]}
+                ]}
+
+                Example 4.
+                Request: List the ten most cited papers about Amyloid-beta precursor protein
+                Response: {\"mentions\": [
+                    {\"text\": \"Amyloid-beta precursor protein\", \"candidateTypes\": [\"http://www.w3.org/2004/02/skos/core#Concept\", \"https://schema.org/MedicalCondition\"]}
+                ]}
+                """;
+          tool:limit "3"^^<http://www.w3.org/2001/XMLSchema#int>;
+          tool:taskInstructions """
+                - Extract named entities from the request provided below # REQUEST #.
+                - Only extract entities that may be instances of the types defined in the OWL ontology provided below # ONTOLOGY #.
+                - Do not extract mentions of types, numbers or dates.
+                - Assign all relevant candidate types to the named entities using only types from the OWL ontology.
+                - Omit the candidate types if you are unsure.
+                """
+        ]
+    ];
+  rdfs:label "Default Search & Discovery Agent" .

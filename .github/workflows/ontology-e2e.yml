@@ -1,0 +1,125 @@
+name: Ontology E2E (rapper)
+
+on:
+  push:
+    branches: [ "**" ]
+    paths: [ "**/*.ttl", "tooling/**", ".github/workflows/ontology-e2e.yml" ]
+  pull_request:
+    paths: [ "**/*.ttl", "tooling/**", ".github/workflows/ontology-e2e.yml" ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      GROUP_ID: com.example.ont
+      LOCAL_REPO_DIR: ${{ github.workspace }}/local-mvn-repo
+      RELEASE_REPO_URL: file://${{ github.workspace }}/local-mvn-repo
+      SNAPSHOT_REPO_URL: file://${{ github.workspace }}/local-mvn-repo
+      ARTIFACTORY_ID: local-repo
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          # cache: maven
+
+      - name: Install CLI deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y raptor2-utils xmlstarlet
+          mkdir -p "$LOCAL_REPO_DIR"
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<'XML'
+          <settings>
+            <servers>
+              <server>
+                <id>local-repo</id>
+                <username>unused</username>
+                <password>unused</password>
+              </server>
+            </servers>
+          </settings>
+          XML
+
+      - name: Publish ontology (rapper path)
+        env:
+          OUT_MANIFEST: target/published.txt
+        run: |
+          bash tooling/ci/publish.sh
+          test -s target/published.txt || { echo "No ontology published (branch may not contain NAME/VERSION/NAME.ttl)"; exit 0; }
+          cat target/published.txt
+
+      - name: Create consumer & fetch artifacts
+        run: |
+          mkdir -p consumer
+          cat > consumer/pom.xml <<'POM'
+          <project xmlns="http://maven.apache.org/POM/4.0.0">
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>test.local</groupId>
+            <artifactId>consumer</artifactId>
+            <version>0.0.1</version>
+            <repositories>
+              <repository>
+                <id>local-repo</id>
+                <url>file://${project.basedir}/../local-mvn-repo</url>
+              </repository>
+            </repositories>
+            <dependencies>
+            <!-- will append from manifest -->
+            </dependencies>
+            <build>
+              <plugins>
+                <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-dependency-plugin</artifactId>
+                  <version>3.6.1</version>
+                  <executions>
+                    <execution>
+                      <id>copy-onts</id>
+                      <phase>process-resources</phase>
+                      <goals><goal>copy</goal></goals>
+                      <configuration>
+                        <artifactItems/>
+                      </configuration>
+                    </execution>
+                  </executions>
+                </plugin>
+              </plugins>
+            </build>
+          </project>
+          POM
+
+          while IFS=: read -r G A V; do
+            # add dependency (so transitives from generated POM are resolved)
+            xmlstarlet ed -L \
+              -s "/project/dependencies" -t elem -n "dependency" -v "" \
+              -s "/project/dependencies/dependency[last()]" -t elem -n "groupId" -v "$G" \
+              -s "/project/dependencies/dependency[last()]" -t elem -n "artifactId" -v "$A" \
+              -s "/project/dependencies/dependency[last()]" -t elem -n "version" -v "$V" \
+              -s "/project/dependencies/dependency[last()]" -t elem -n "type" -v "ttl" \
+              -s "/project/dependencies/dependency[last()]" -t elem -n "classifier" -v "ontology" \
+              consumer/pom.xml
+
+            # copy the artifact (prove the .ttl is retrievable)
+            xmlstarlet ed -L \
+              -s "/project/build/plugins/plugin/configuration/artifactItems" -t elem -n "artifactItem" -v "" \
+              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "groupId" -v "$G" \
+              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "artifactId" -v "$A" \
+              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "version" -v "$V" \
+              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "type" -v "ttl" \
+              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "classifier" -v "ontology" \
+              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "outputDirectory" -v "\${project.build.directory}/deps" \
+              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "destFileName" -v "$A.ttl" \
+              consumer/pom.xml
+          done < target/published.txt
+
+      - name: Build consumer & verify
+        working-directory: consumer
+        run: |
+          mvn -q -DskipTests package
+          while IFS=: read -r _ A _; do
+            test -f target/deps/"$A".ttl || (echo "Missing target/deps/$A.ttl" && exit 1)
+          done < ../target/published.txt

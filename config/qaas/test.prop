@@ -1,0 +1,5 @@
+iri = http://localhost:10214/container/queryTemplateContainer/test
+responseformat = text/csv
+disabled = false
+aclPermission = qaas:execute:*
+publisher = http://www.metaphacts.com/resource/user/admin

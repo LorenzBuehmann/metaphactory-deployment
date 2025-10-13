@@ -1,0 +1,132 @@
+@prefix : <http://www.metaphacts.com/shacl/> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+
+
+:OwlOntologyShape
+    a sh:NodeShape ;
+    sh:targetClass owl:Ontology ;
+    sh:property [
+        sh:path dct:title ;
+        sh:minCount 1 ;
+        sh:uniqueLang true ; 
+        sh:datatype rdf:langString ;
+        sh:severity sh:Warning ;
+        sh:message "Each Ontology must define a dct:title with a unique language tag" ;
+        sh:description "Require at least 1 dct:title, ensure only one dct:title per language, ensure datatype is rdf:langString" ;
+    ] ;
+    sh:property [
+        sh:path rdfs:label ;
+        sh:datatype rdf:langString ;
+        sh:minCount 1 ;
+        sh:uniqueLang true ;
+        sh:severity sh:Info ;
+        sh:message "Each Ontology should define an rdfs:label with a unique language tag" ;
+        sh:description "Require at least 1 rdfs:label, ensure only one rdfs:label per language, ensure datatype is rdf:langString" ;
+    ];
+    sh:property [
+        sh:path owl:versionInfo ;
+        sh:severity sh:Warning ;
+        sh:minCount 1 ;
+        sh:message "Each Ontology should define an owl:versionInfo property" ;
+        sh:description "Require at least 1 owl:versionInfo property" ;
+    ] .
+    
+:RdfsClassShape
+    a sh:NodeShape ; 
+    sh:targetClass rdfs:Class ;
+    sh:sparql [
+        sh:select """
+            SELECT $this
+            WHERE {
+                FILTER NOT EXISTS {
+                    $this a owl:Class ;
+                }
+            }
+        """;
+     ];
+    sh:severity sh:Violation ;
+    sh:message "Each rdfs:Class must also be of type owl:Class" ;
+    sh:description "Require all rdfs:Classes to also be owl:Classes" ;
+.
+
+:OwlClassShape
+    a sh:NodeShape ;
+    sh:targetClass owl:Class ;
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:uniqueLang true ;
+        sh:datatype rdf:langString ;
+        sh:severity sh:Warning ;
+        sh:message "Each Class must define an rdfs:label with a unique language tag" ;
+        sh:description "Require at least 1 rdfs:label, ensure only one rdfs:label per language, ensure datatype is rdf:langString" ;
+    ] .
+
+:DatatypePropertyShape 
+  a sh:NodeShape ;
+  sh:targetClass owl:DatatypeProperty ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:uniqueLang true ;
+    sh:datatype rdf:langString ;
+    sh:severity sh:Warning ;
+    sh:message "Each Datatype Property must define an rdfs:label with a unique language tag" ;
+    sh:description "Require at least 1 rdfs:label, ensure only one rdfs:label per language, ensure datatype is rdf:langString" ;
+  ] .
+
+:ObjectPropertyShape 
+  a sh:NodeShape ;
+  sh:targetClass owl:ObjectProperty ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:uniqueLang true ;
+    sh:datatype rdf:langString ;
+    sh:severity sh:Warning ;
+    sh:message "Each Object Property must define an rdfs:label with a unique language tag" ;
+    sh:description "Require at least 1 rdfs:label, ensure only one rdfs:label per language, ensure datatype is rdf:langString" ;
+  ] .
+
+
+#Ensures Ontology and Vocabulary (owl:Ontology and skos:ConceptScheme) data cannot exist together in the same graph
+sh:OntologiesAndVocabulariesCannotExistTogether
+    a sh:NodeShape ;
+    sh:targetClass owl:Ontology ;
+    sh:sparql [
+        sh:select """
+            SELECT ?a
+            WHERE {
+                GRAPH ?graph {
+                    FILTER EXISTS {
+                        ?a a owl:Ontology .
+                        ?b a <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+                    }
+                }
+            }
+        """;
+    ];
+    sh:severity sh:Violation ;
+    sh:message "Cannot mix Ontology and Vocabulary data - both skos:ConceptScheme and owl:Ontology resources exist in this Ontology." ;
+    sh:description "Ensures owl:Ontology and skos:ConceptScheme are not both defined in an Ontology" .
+
+sh:OntologyShouldNotImportArchivedOntology
+    a sh:NodeShape ;
+    sh:targetClass owl:Ontology ;
+    sh:sparql [
+      sh:select """
+        SELECT $this ?o WHERE {
+          $this owl:imports ?o .
+          $this <http://example.org/qa/importsArchived> ?o .
+        }
+      """ ;
+    ] ;
+    sh:severity sh:Warning ;
+    sh:message "Import of archived ontology: <{$this}> imports an archived ontology {?o}." ;
+    sh:description "The ontology imports at least one archived ontology." .
+

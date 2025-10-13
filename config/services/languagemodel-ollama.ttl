@@ -1,0 +1,19 @@
+@prefix ai-service-config: <http://www.metaphacts.com/ontologies/platform/service/config/ai/> .
+@prefix llm: <http://www.metaphacts.com/ontologies/platform/service/config/ai/languagemodel/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix service-config: <http://www.metaphacts.com/ontologies/platform/service/config/> .
+
+<urn:service:languagemodel-ollama> a service-config:Service, ai-service-config:OllamaLanguageModel;
+  service-config:config [
+      llm:contextWindow "32000"^^<http://www.w3.org/2001/XMLSchema#int>;
+      llm:endpoint "http://localhost:11434";
+      llm:frequencyPenalty 0.0E0;
+      llm:maxCompletionTokens "1000"^^<http://www.w3.org/2001/XMLSchema#int>;
+      llm:modelName "devstral:latest";
+      llm:temperature 0.0E0;
+      llm:timeoutInSeconds "60"^^<http://www.w3.org/2001/XMLSchema#int>;
+      llm:topK "40"^^<http://www.w3.org/2001/XMLSchema#int>;
+      llm:topP 9.5E-1
+    ];
+  rdfs:label "LLM hosted within an Ollama server" .
