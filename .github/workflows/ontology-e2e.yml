@@ -52,7 +52,7 @@ jobs:
           test -s target/published.txt || { echo "No ontology published (branch may not contain NAME/VERSION/NAME.ttl)"; exit 0; }
           cat target/published.txt
 
-      - name: Create consumer & fetch artifacts
+      - name: Create consumer project
         run: |
           mkdir -p consumer
           cat > consumer/pom.xml <<'POM'
@@ -67,9 +67,7 @@ jobs:
                 <url>file://${project.basedir}/../local-mvn-repo</url>
               </repository>
             </repositories>
-            <dependencies>
-            <!-- will append from manifest -->
-            </dependencies>
+            <dependencies/>
             <build>
               <plugins>
                 <plugin>
@@ -78,11 +76,14 @@ jobs:
                   <version>3.6.1</version>
                   <executions>
                     <execution>
-                      <id>copy-onts</id>
+                      <id>copy-ontology-jars</id>
                       <phase>process-resources</phase>
                       <goals><goal>copy</goal></goals>
                       <configuration>
                         <artifactItems/>
+                        <overWrite>true</overWrite>
+                        <transitive>false</transitive>
+                        <outputAbsoluteArtifactFilename>false</outputAbsoluteArtifactFilename>
                       </configuration>
                     </execution>
                   </executions>
@@ -92,29 +93,57 @@ jobs:
           </project>
           POM
 
+      - name: Add JAR dependencies for every published ontology
+        run: |
+          if [[ ! -s target/published.txt ]]; then
+            echo "No published ontologies; skipping consumer config."
+            exit 0
+          fi
+
           while IFS=: read -r G A V; do
-            # add dependency (so transitives from generated POM are resolved)
+            # Add dependency (type=jar; no classifier)
             xmlstarlet ed -L \
               -s "/project/dependencies" -t elem -n "dependency" -v "" \
               -s "/project/dependencies/dependency[last()]" -t elem -n "groupId" -v "$G" \
               -s "/project/dependencies/dependency[last()]" -t elem -n "artifactId" -v "$A" \
               -s "/project/dependencies/dependency[last()]" -t elem -n "version" -v "$V" \
-              -s "/project/dependencies/dependency[last()]" -t elem -n "type" -v "ttl" \
-              -s "/project/dependencies/dependency[last()]" -t elem -n "classifier" -v "ontology" \
+              -s "/project/dependencies/dependency[last()]" -t elem -n "type" -v "jar" \
               consumer/pom.xml
 
-            # copy the artifact (prove the .ttl is retrievable)
+            # Configure dependency:copy to fetch the JAR into target/deps
             xmlstarlet ed -L \
               -s "/project/build/plugins/plugin/configuration/artifactItems" -t elem -n "artifactItem" -v "" \
               -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "groupId" -v "$G" \
               -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "artifactId" -v "$A" \
               -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "version" -v "$V" \
-              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "type" -v "ttl" \
-              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "classifier" -v "ontology" \
+              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "type" -v "jar" \
               -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "outputDirectory" -v "\${project.build.directory}/deps" \
-              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "destFileName" -v "$A.ttl" \
+              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "destFileName" -v "${A}-${V}.jar" \
               consumer/pom.xml
           done < target/published.txt
+
+          echo "Consumer POM (after injection):"
+          sed -n '1,200p' consumer/pom.xml
+
+      - name: Build consumer & fetch ontology JARs
+        working-directory: consumer
+        run: |
+            mvn -q -DskipTests package
+            # sanity: jars exist
+            while IFS=: read -r _ A V; do
+              test -f "target/deps/${A}-${V}.jar" || (echo "Missing target/deps/${A}-${V}.jar" && exit 1)
+            done < ../target/published.txt
+
+      - name: Verify TTL is inside each JAR (classpath layout)
+        working-directory: consumer
+        run: |
+          sudo apt-get update >/dev/null 2>&1 || true
+          sudo apt-get install -y unzip >/dev/null 2>&1 || true
+          while IFS=: read -r _ A V; do
+            unzip -l "target/deps/${A}-${V}.jar" | grep -q "META-INF/ontology/${A}\.ttl" \
+              || (echo "TTL not found in ${A}-${V}.jar at META-INF/ontology/${A}.ttl" && exit 1)
+          done < ../target/published.txt
+
 
       - name: Build consumer & verify
         working-directory: consumer
