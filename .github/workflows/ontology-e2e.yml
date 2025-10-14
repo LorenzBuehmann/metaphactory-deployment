@@ -128,38 +128,39 @@ jobs:
                     p:groupId='org.apache.maven.plugins' and
                     p:artifactId='maven-dependency-plugin'
                   ]/p:configuration/p:artifactItems" \
-                -t elem -n "artifactItem" -v "" \
+                  -t elem -n "artifactItem" -v "" \
               -s "/p:project/p:build/p:plugins/p:plugin[
                     p:groupId='org.apache.maven.plugins' and
                     p:artifactId='maven-dependency-plugin'
-                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
-                -t elem -n "groupId" -v "$G" \
+                  ]/p:configuration/p:artifactItems/*[local-name()='artifactItem'][last()]" \
+                  -t elem -n "groupId" -v "$G" \
               -s "/p:project/p:build/p:plugins/p:plugin[
                     p:groupId='org.apache.maven.plugins' and
                     p:artifactId='maven-dependency-plugin'
-                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
-                -t elem -n "artifactId" -v "$A" \
+                  ]/p:configuration/p:artifactItems/*[local-name()='artifactItem'][last()]" \
+                  -t elem -n "artifactId" -v "$A" \
               -s "/p:project/p:build/p:plugins/p:plugin[
                     p:groupId='org.apache.maven.plugins' and
                     p:artifactId='maven-dependency-plugin'
-                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
-                -t elem -n "version" -v "$V" \
+                  ]/p:configuration/p:artifactItems/*[local-name()='artifactItem'][last()]" \
+                  -t elem -n "version" -v "$V" \
               -s "/p:project/p:build/p:plugins/p:plugin[
                     p:groupId='org.apache.maven.plugins' and
                     p:artifactId='maven-dependency-plugin'
-                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
-                -t elem -n "type" -v "jar" \
+                  ]/p:configuration/p:artifactItems/*[local-name()='artifactItem'][last()]" \
+                  -t elem -n "type" -v "jar" \
               -s "/p:project/p:build/p:plugins/p:plugin[
                     p:groupId='org.apache.maven.plugins' and
                     p:artifactId='maven-dependency-plugin'
-                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
-                -t elem -n "outputDirectory" -v "\${project.build.directory}/deps" \
+                  ]/p:configuration/p:artifactItems/*[local-name()='artifactItem'][last()]" \
+                  -t elem -n "outputDirectory" -v "\${project.build.directory}/deps" \
               -s "/p:project/p:build/p:plugins/p:plugin[
                     p:groupId='org.apache.maven.plugins' and
                     p:artifactId='maven-dependency-plugin'
-                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
-                -t elem -n "destFileName" -v "${A}-${V}.jar" \
+                  ]/p:configuration/p:artifactItems/*[local-name()='artifactItem'][last()]" \
+                  -t elem -n "destFileName" -v "${A}-${V}.jar" \
               consumer/pom.xml
+
 
           done < target/published.txt
 
