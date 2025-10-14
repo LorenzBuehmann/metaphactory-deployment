@@ -112,13 +112,14 @@ jobs:
           while IFS=: read -r G A V; do
             # Add dependency (type=jar; no classifier)
             xmlstarlet ed -L \
-            -N p="http://maven.apache.org/POM/4.0.0" \
-            -s "/p:project/p:dependencies" -t elem -n "dependency" -v "" \
-            -s "/p:project/p:dependencies/p:dependency[last()]" -t elem -n "groupId" -v "$G" \
-            -s "/p:project/p:dependencies/p:dependency[last()]" -t elem -n "artifactId" -v "$A" \
-            -s "/p:project/p:dependencies/p:dependency[last()]" -t elem -n "version" -v "$V" \
-            -s "/p:project/p:dependencies/p:dependency[last()]" -t elem -n "type" -v "jar" \
-            consumer/pom.xml
+              -N p="http://maven.apache.org/POM/4.0.0" \
+              -s "/p:project/p:dependencies" -t elem -n "dependency" -v "" \
+              -s "/p:project/p:dependencies/*[local-name()='dependency'][last()]" -t elem -n "groupId" -v "$G" \
+              -s "/p:project/p:dependencies/*[local-name()='dependency'][last()]" -t elem -n "artifactId" -v "$A" \
+              -s "/p:project/p:dependencies/*[local-name()='dependency'][last()]" -t elem -n "version" -v "$V" \
+              -s "/p:project/p:dependencies/*[local-name()='dependency'][last()]" -t elem -n "type" -v "jar" \
+              consumer/pom.xml
+
 
             # Configure dependency:copy to fetch the JAR into target/deps
             xmlstarlet ed -L \
