@@ -112,23 +112,54 @@ jobs:
           while IFS=: read -r G A V; do
             # Add dependency (type=jar; no classifier)
             xmlstarlet ed -L \
-              -s "/project/dependencies" -t elem -n "dependency" -v "" \
-              -s "/project/dependencies/dependency[last()]" -t elem -n "groupId" -v "$G" \
-              -s "/project/dependencies/dependency[last()]" -t elem -n "artifactId" -v "$A" \
-              -s "/project/dependencies/dependency[last()]" -t elem -n "version" -v "$V" \
-              -s "/project/dependencies/dependency[last()]" -t elem -n "type" -v "jar" \
-              consumer/pom.xml
+            -N p="http://maven.apache.org/POM/4.0.0" \
+            -s "/p:project/p:dependencies" -t elem -n "dependency" -v "" \
+            -s "/p:project/p:dependencies/p:dependency[last()]" -t elem -n "groupId" -v "$G" \
+            -s "/p:project/p:dependencies/p:dependency[last()]" -t elem -n "artifactId" -v "$A" \
+            -s "/p:project/p:dependencies/p:dependency[last()]" -t elem -n "version" -v "$V" \
+            -s "/p:project/p:dependencies/p:dependency[last()]" -t elem -n "type" -v "jar" \
+            consumer/pom.xml
 
             # Configure dependency:copy to fetch the JAR into target/deps
             xmlstarlet ed -L \
-              -s "/project/build/plugins/plugin/configuration/artifactItems" -t elem -n "artifactItem" -v "" \
-              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "groupId" -v "$G" \
-              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "artifactId" -v "$A" \
-              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "version" -v "$V" \
-              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "type" -v "jar" \
-              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "outputDirectory" -v "\${project.build.directory}/deps" \
-              -s "/project/build/plugins/plugin/configuration/artifactItems/artifactItem[last()]" -t elem -n "destFileName" -v "${A}-${V}.jar" \
+              -N p="http://maven.apache.org/POM/4.0.0" \
+              -s "/p:project/p:build/p:plugins/p:plugin[
+                    p:groupId='org.apache.maven.plugins' and
+                    p:artifactId='maven-dependency-plugin'
+                  ]/p:configuration/p:artifactItems" \
+                -t elem -n "artifactItem" -v "" \
+              -s "/p:project/p:build/p:plugins/p:plugin[
+                    p:groupId='org.apache.maven.plugins' and
+                    p:artifactId='maven-dependency-plugin'
+                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
+                -t elem -n "groupId" -v "$G" \
+              -s "/p:project/p:build/p:plugins/p:plugin[
+                    p:groupId='org.apache.maven.plugins' and
+                    p:artifactId='maven-dependency-plugin'
+                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
+                -t elem -n "artifactId" -v "$A" \
+              -s "/p:project/p:build/p:plugins/p:plugin[
+                    p:groupId='org.apache.maven.plugins' and
+                    p:artifactId='maven-dependency-plugin'
+                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
+                -t elem -n "version" -v "$V" \
+              -s "/p:project/p:build/p:plugins/p:plugin[
+                    p:groupId='org.apache.maven.plugins' and
+                    p:artifactId='maven-dependency-plugin'
+                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
+                -t elem -n "type" -v "jar" \
+              -s "/p:project/p:build/p:plugins/p:plugin[
+                    p:groupId='org.apache.maven.plugins' and
+                    p:artifactId='maven-dependency-plugin'
+                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
+                -t elem -n "outputDirectory" -v "\${project.build.directory}/deps" \
+              -s "/p:project/p:build/p:plugins/p:plugin[
+                    p:groupId='org.apache.maven.plugins' and
+                    p:artifactId='maven-dependency-plugin'
+                  ]/p:configuration/p:artifactItems/p:artifactItem[last()]" \
+                -t elem -n "destFileName" -v "${A}-${V}.jar" \
               consumer/pom.xml
+
           done < target/published.txt
 
           echo "Consumer POM (after injection):"
