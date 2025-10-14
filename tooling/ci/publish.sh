@@ -109,7 +109,6 @@ EOF
       <artifactId>${a}</artifactId>
       <version>${v}</version>
       <type>${PACKAGING}</type>
-      <classifier>${CLASSIFIER}</classifier>
     </dependency>
 EOD
   done
