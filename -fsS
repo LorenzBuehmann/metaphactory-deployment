@@ -1,0 +1,75 @@
+== Info:   Trying 127.0.0.1:7200...
+== Info: Connected to localhost (127.0.0.1) port 7200 (#0)
+=> Send header, 171 bytes (0xab)
+0000: 50 4f 53 54 20 2f 20 48 54 54 50 2f 31 2e 31 0d POST / HTTP/1.1.
+0010: 0a 48 6f 73 74 3a 20 6c 6f 63 61 6c 68 6f 73 74 .Host: localhost
+0020: 3a 37 32 30 30 0d 0a 55 73 65 72 2d 41 67 65 6e :7200..User-Agen
+0030: 74 3a 20 63 75 72 6c 2f 37 2e 38 31 2e 30 0d 0a t: curl/7.81.0..
+0040: 41 63 63 65 70 74 3a 20 74 65 78 74 2f 74 61 62 Accept: text/tab
+0050: 2d 73 65 70 61 72 61 74 65 64 2d 76 61 6c 75 65 -separated-value
+0060: 73 0d 0a 43 6f 6e 74 65 6e 74 2d 4c 65 6e 67 74 s..Content-Lengt
+0070: 68 3a 20 32 39 36 0d 0a 43 6f 6e 74 65 6e 74 2d h: 296..Content-
+0080: 54 79 70 65 3a 20 61 70 70 6c 69 63 61 74 69 6f Type: applicatio
+0090: 6e 2f 78 2d 77 77 77 2d 66 6f 72 6d 2d 75 72 6c n/x-www-form-url
+00a0: 65 6e 63 6f 64 65 64 0d 0a 0d 0a                encoded....
+=> Send data, 296 bytes (0x128)
+0000: 71 75 65 72 79 3d 25 30 41 50 52 45 46 49 58 2b query=%0APREFIX+
+0010: 6f 77 6c 25 33 41 2b 25 33 43 68 74 74 70 25 33 owl%3A+%3Chttp%3
+0020: 41 25 32 46 25 32 46 77 77 77 2e 77 33 2e 6f 72 A%2F%2Fwww.w3.or
+0030: 67 25 32 46 32 30 30 32 25 32 46 30 37 25 32 46 g%2F2002%2F07%2F
+0040: 6f 77 6c 25 32 33 25 33 45 25 30 41 53 45 4c 45 owl%23%3E%0ASELE
+0050: 43 54 2b 44 49 53 54 49 4e 43 54 2b 25 33 46 69 CT+DISTINCT+%3Fi
+0060: 6d 70 2b 57 48 45 52 45 2b 25 37 42 25 30 41 2b mp+WHERE+%7B%0A+
+0070: 2b 47 52 41 50 48 2b 25 33 43 68 74 74 70 25 33 +GRAPH+%3Chttp%3
+0080: 41 25 32 46 25 32 46 6f 6e 74 6f 6c 6f 67 69 65 A%2F%2Fontologie
+0090: 73 2e 6d 65 74 61 70 68 61 63 74 73 2e 63 6f 6d s.metaphacts.com
+00a0: 25 32 46 74 65 73 74 2d 62 61 73 65 2d 6f 6e 74 %2Ftest-base-ont
+00b0: 25 32 46 64 65 70 73 25 32 46 67 72 61 70 68 25 %2Fdeps%2Fgraph%
+00c0: 33 45 2b 25 37 42 25 30 41 2b 2b 2b 2b 25 33 46 3E+%7B%0A++++%3F
+00d0: 6f 2b 61 2b 6f 77 6c 25 33 41 4f 6e 74 6f 6c 6f o+a+owl%3AOntolo
+00e0: 67 79 2b 2e 25 30 41 2b 2b 2b 2b 4f 50 54 49 4f gy+.%0A++++OPTIO
+00f0: 4e 41 4c 2b 25 37 42 2b 25 33 46 6f 2b 6f 77 6c NAL+%7B+%3Fo+owl
+0100: 25 33 41 69 6d 70 6f 72 74 73 2b 25 33 46 69 6d %3Aimports+%3Fim
+0110: 70 2b 2e 2b 25 37 44 25 30 41 2b 2b 25 37 44 25 p+.+%7D%0A++%7D%
+0120: 30 41 25 37 44 25 30 41                         0A%7D%0A
+== Info: Mark bundle as not supporting multiuse
+<= Recv header, 15 bytes (0xf)
+0000: 48 54 54 50 2f 31 2e 31 20 34 30 35 20 0d 0a    HTTP/1.1 405 ..
+<= Recv header, 23 bytes (0x17)
+0000: 56 61 72 79 3a 20 41 63 63 65 70 74 2d 45 6e 63 Vary: Accept-Enc
+0010: 6f 64 69 6e 67 0d 0a                            oding..
+<= Recv header, 14 bytes (0xe)
+0000: 56 61 72 79 3a 20 4f 72 69 67 69 6e 0d 0a       Vary: Origin..
+<= Recv header, 37 bytes (0x25)
+0000: 56 61 72 79 3a 20 41 63 63 65 73 73 2d 43 6f 6e Vary: Access-Con
+0010: 74 72 6f 6c 2d 52 65 71 75 65 73 74 2d 4d 65 74 trol-Request-Met
+0020: 68 6f 64 0d 0a                                  hod..
+<= Recv header, 38 bytes (0x26)
+0000: 56 61 72 79 3a 20 41 63 63 65 73 73 2d 43 6f 6e Vary: Access-Con
+0010: 74 72 6f 6c 2d 52 65 71 75 65 73 74 2d 48 65 61 trol-Request-Hea
+0020: 64 65 72 73 0d 0a                               ders..
+<= Recv header, 45 bytes (0x2d)
+0000: 43 61 63 68 65 2d 43 6f 6e 74 72 6f 6c 3a 20 6d Cache-Control: m
+0010: 61 78 2d 61 67 65 3d 36 30 30 2c 20 6d 75 73 74 ax-age=600, must
+0020: 2d 72 65 76 61 6c 69 64 61 74 65 0d 0a          -revalidate..
+<= Recv header, 40 bytes (0x28)
+0000: 43 6f 6e 74 65 6e 74 2d 54 79 70 65 3a 20 74 65 Content-Type: te
+0010: 78 74 2f 70 6c 61 69 6e 3b 63 68 61 72 73 65 74 xt/plain;charset
+0020: 3d 55 54 46 2d 38 0d 0a                         =UTF-8..
+<= Recv header, 20 bytes (0x14)
+0000: 43 6f 6e 74 65 6e 74 2d 4c 65 6e 67 74 68 3a 20 Content-Length: 
+0010: 31 39 0d 0a                                     19..
+<= Recv header, 37 bytes (0x25)
+0000: 44 61 74 65 3a 20 57 65 64 2c 20 31 35 20 4f 63 Date: Wed, 15 Oc
+0010: 74 20 32 30 32 35 20 30 37 3a 32 36 3a 34 35 20 t 2025 07:26:45 
+0020: 47 4d 54 0d 0a                                  GMT..
+<= Recv header, 37 bytes (0x25)
+0000: 53 65 72 76 65 72 3a 20 47 72 61 70 68 44 42 2f Server: GraphDB/
+0010: 31 30 2e 38 2e 38 20 52 44 46 34 4a 2f 34 2e 33 10.8.8 RDF4J/4.3
+0020: 2e 31 35 0d 0a                                  .15..
+<= Recv header, 2 bytes (0x2)
+0000: 0d 0a                                           ..
+<= Recv data, 19 bytes (0x13)
+0000: 4d 65 74 68 6f 64 20 4e 6f 74 20 41 6c 6c 6f 77 Method Not Allow
+0010: 65 64 0a                                        ed.
+== Info: Connection #0 to host localhost left intact

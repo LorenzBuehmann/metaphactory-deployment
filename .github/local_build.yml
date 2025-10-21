@@ -1,0 +1,238 @@
+name: 'TTL Build (Local Artifactory)'
+
+on:
+  workflow_dispatch:
+    inputs:
+      ttl_file:
+        description: 'Path to the TTL file to build (e.g., ontologies/dep/0.1.ttl)'
+        required: true
+        type: string
+
+jobs:
+  build-local:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # --- Ephemeral Artifactory (Docker) ------------------------------------
+      - name: Start local Artifactory
+        run: |
+          set -euo pipefail
+          docker run -d --name artifactory \
+            -p 8081:8081 -p 8082:8082 \
+            -e EXTRA_JAVA_OPTIONS="-Xms512m -Xmx2048m" \
+            releases-docker.jfrog.io/jfrog/artifactory-oss:latest
+          echo "Waiting for Artifactory to be ready..."
+          for i in $(seq 1 120); do
+            if curl -sf http://localhost:8081/artifactory/api/system/ping | grep -q '^OK$'; then
+              echo "Artifactory is up"; break
+            fi
+            sleep 5
+          done
+          curl -sf http://localhost:8081/artifactory/api/system/ping
+
+      - name: Create local Maven repo (maven-ci-local)
+        run: |
+          set -euo pipefail
+          curl -sSf -u admin:password \
+            -H "Content-Type: application/json" \
+            -X PUT "http://localhost:8081/artifactory/api/repositories/maven-ci-local" \
+            -d '{
+                  "rclass": "local",
+                  "packageType": "maven",
+                  "repoLayoutRef": "maven-2-default",
+                  "handleReleases": true,
+                  "handleSnapshots": true
+                }' || echo "Repo may already exist"
+      # -----------------------------------------------------------------------
+
+      - name: Install rapper (RDF parser)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y raptor2-utils jq
+
+      - name: Setup Java & Maven cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Process TTL file
+        id: process_ttl
+        run: |
+          set -euo pipefail
+          ttl_path="${{ inputs.ttl_file }}"
+          ontology_dir=$(dirname "$ttl_path")
+          nt_file=$(mktemp)
+
+          # Convert TTL -> N-Triples
+          rapper -i turtle -o ntriples "$ttl_path" > "$nt_file"
+
+          # Ontology IRI (subject typed owl:Ontology)
+          ontology_iri=$(awk '/<http:\/\/www\.w3\.org\/1999\/02\/22-rdf-syntax-ns#type>[[:space:]]+<http:\/\/www\.w3\.org\/2002\/07\/owl#Ontology>/{ if (match($0,/^<([^>]*)>/,m)) { print m[1]; exit } }' "$nt_file")
+
+          # Version & title (first literals)
+          version_id=$(grep '<http://www.w3.org/2002/07/owl#versionInfo>' "$nt_file" | grep -o '"[^"]*"' | head -1 | tr -d '"')
+          ontology_name=$(grep '<http://purl.org/dc/terms/title>' "$nt_file" | grep -o '"[^"]*"' | head -1 | tr -d '"')
+
+          # Published? (scoped to ontology subject)
+          is_published="false"
+          if [ -n "$ontology_iri" ] && grep -q "<$ontology_iri> <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/published>" "$nt_file"; then
+            is_published="true"
+          fi
+
+          # OWL imports (object only)
+          imports=$(awk '/<http:\/\/www\.w3\.org\/2002\/07\/owl#imports>/{
+            if (match($0,/<[^>]*>[[:space:]]+<[^>]*>[[:space:]]+<([^>]*)>/,m)) print m[1]
+          }' "$nt_file" || true)
+
+          # Git metadata
+          committer_name=$(git log -1 --pretty=format:'%an' -- "$ttl_path")
+          committer_email=$(git log -1 --pretty=format:'%ae' -- "$ttl_path")
+          commit_date=$(git log -1 --pretty=format:'%ai' -- "$ttl_path")
+          commit_hash=$(git log -1 --pretty=format:'%h' -- "$ttl_path")
+
+          # Simple version (no Artifactory lookup here)
+          if [ "$is_published" = "true" ]; then
+            maven_version="$version_id"
+          else
+            maven_version="${version_id}.1-SNAPSHOT"
+          fi
+
+          {
+            echo "ttl_path=$ttl_path"
+            echo "ontology_dir=$ontology_dir"
+            echo "ontology_name=$ontology_name"
+            echo "version_id=$version_id"
+            echo "maven_version=$maven_version"
+            echo "imports=$imports"
+            echo "committer_name=$committer_name"
+            echo "committer_email=$committer_email"
+            echo "commit_date=$commit_date"
+            echo "commit_hash=$commit_hash"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: (Optional) Resolve import versions via SPARQL
+        id: resolve_imports
+        env:
+          SPARQL_ENDPOINT: ${{ secrets.SPARQL_ENDPOINT }}
+          SPARQL_AUTH_HEADER_NAME: ${{ secrets.SPARQL_AUTH_HEADER_NAME }}
+          SPARQL_AUTH_TOKEN: ${{ secrets.SPARQL_AUTH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SPARQL_ENDPOINT:-}" ]; then
+            echo "dependencies_block=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          imports="${{ steps.process_ttl.outputs.imports }}"
+          group_id="datev.dataintegration.ontologies"
+          DATE_SUFFIX=$(date -u +%Y%m%d)
+
+          to_artifact_id() {
+            echo "$1" | sed -E 's/[#\/]+$//; s/.*[\/#]//' | tr '[:upper:]' '[:lower:]'
+          }
+
+          resolve_import_version() {
+            import_iri="$1"
+            query=$(jq -rn --arg iri "$import_iri" '
+              "SELECT ?version ?status WHERE {
+                GRAPH <\($iri)> {
+                  ?s a <http://www.w3.org/2002/07/owl#Ontology> ;
+                     <http://www.w3.org/2002/07/owl#versionInfo> ?version ;
+                     <http://purl.org/ontology/bibo/status> ?status .
+                }
+              }"
+            ')
+            if [[ -n "${SPARQL_AUTH_HEADER_NAME:-}" && -n "${SPARQL_AUTH_TOKEN:-}" ]]; then
+              auth_header="$SPARQL_AUTH_HEADER_NAME: $SPARQL_AUTH_TOKEN"
+            else
+              auth_header=""
+            fi
+            response=$(curl -sG --data-urlencode "query=$query" \
+              -H 'Accept: application/sparql-results+json' \
+              ${auth_header:+-H "$auth_header"} \
+              "$SPARQL_ENDPOINT")
+            version=$(echo "$response" | jq -r '.results.bindings[0].version.value // empty')
+            status=$(echo "$response" | jq -r '.results.bindings[0].status.value // empty')
+            if [[ -z "$version" ]]; then
+              echo "LATEST"; return
+            fi
+            if [[ "$status" == "http://purl.org/spar/pso/published" ]]; then
+              echo "$version"
+            else
+              echo "${version}-${DATE_SUFFIX}.1-SNAPSHOT"
+            fi
+          }
+
+          dependencies=""
+          for iri in $imports; do
+            artifact_id=$(to_artifact_id "$iri")
+            resolved_version=$(resolve_import_version "$iri")
+            dependencies+="
+              <dependency>
+                <groupId>$group_id</groupId>
+                <artifactId>$artifact_id</artifactId>
+                <version>$resolved_version</version>
+              </dependency>"
+          done
+
+          escaped_deps=$(printf '%s\n' "$dependencies" | sed -e 's/[\/&]/\\&/g')
+          echo "dependencies_block=$escaped_deps" >> $GITHUB_OUTPUT
+
+      - name: Copy TTL into src/main/resources
+        run: |
+          set -euo pipefail
+          ttl_path="${{ inputs.ttl_file }}"
+          ontology_dir="${{ steps.process_ttl.outputs.ontology_dir }}"
+          mkdir -p "$ontology_dir/src/main/resources"
+          cp "$ttl_path" "$ontology_dir/src/main/resources/"
+
+      - name: Prepare pom.xml
+        run: |
+          set -euo pipefail
+          ontology_dir="${{ steps.process_ttl.outputs.ontology_dir }}"
+          ontology_name="${{ steps.process_ttl.outputs.ontology_name }}"
+          maven_version="${{ steps.process_ttl.outputs.maven_version }}"
+          committer_name="${{ steps.process_ttl.outputs.committer_name }}"
+          committer_email="${{ steps.process_ttl.outputs.committer_email }}"
+          commit_date="${{ steps.process_ttl.outputs.commit_date }}"
+          commit_hash="${{ steps.process_ttl.outputs.commit_hash }}"
+          escaped_dependencies="${{ steps.resolve_imports.outputs.dependencies_block }}"
+          sed -e "s/__ARTIFACT_ID__/$ontology_name/g" \
+              -e "s/__VERSION_ID__/$maven_version/g" \
+              -e "s/__COMMITTER_NAME__/$committer_name/g" \
+              -e "s/__COMMITTER_EMAIL__/$committer_email/g" \
+              -e "s/__COMMIT_DATE__/$commit_date/g" \
+              -e "s/__COMMIT_HASH__/$commit_hash/g" \
+              -e "s|__OWL_IMPORT_DEPENDENCIES__|${escaped_dependencies:-}|" \
+              ./pom-template.xml > "$ontology_dir/pom.xml"
+
+      - name: Build (mvn package)
+        working-directory: ${{ steps.process_ttl.outputs.ontology_dir }}
+        run: |
+          set -euo pipefail
+          mvn -B clean package
+
+      - name: Deploy to local Artifactory (mvn deploy)
+        working-directory: ${{ steps.process_ttl.outputs.ontology_dir }}
+        run: |
+          set -euo pipefail
+          mvn -B -DaltDeploymentRepository="local::default::http://admin:password@localhost:8081/artifactory/maven-ci-local" deploy
+
+      - name: Verify artifact in local Artifactory
+        run: |
+          set -euo pipefail
+          base="http://localhost:8081/artifactory/api/storage/maven-ci-local/datev/dataintegration/ontologies"
+          curl -sf -u admin:password \
+            "$base/${{ steps.process_ttl.outputs.ontology_name }}/${{ steps.process_ttl.outputs.maven_version }}/" | jq .
+
+      - name: Cleanup local Artifactory
+        if: always()
+        run: docker rm -f artifactory || true
