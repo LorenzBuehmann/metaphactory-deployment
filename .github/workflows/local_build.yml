@@ -30,7 +30,7 @@ jobs:
       
           # ---- PostgreSQL sidecar -------------------------------------------------
           docker rm -f artipg >/dev/null 2>&1 || true
-          docker run -d --name artipg --network ci-arti-net \
+          docker run --rm -d --name artipg --network ci-arti-net \
             -e POSTGRES_USER=artifactory \
             -e POSTGRES_PASSWORD=artipwd \
             -e POSTGRES_DB=artifactory \
@@ -70,13 +70,12 @@ jobs:
       
           # ---- Start Artifactory --------------------------------------------------
           docker rm -f artifactory >/dev/null 2>&1 || true
-          docker run -d --name artifactory --network ci-arti-net \
+          docker run --rm -d --name artifactory --network ci-arti-net \
             --shm-size=1g \
             -p 8081:8081 -p 8082:8082 \
             -v /tmp/arti-conf/system.yaml:/opt/jfrog/artifactory/var/etc/system.yaml:ro \
             -e JF_SHARED_NODE_ID="ci-node-1" \
             -e JF_ROUTER_TLS_ENABLED="false" \
-            # Also export keys via env (belt & suspenders)
             -e JF_SHARED_SECURITY_MASTERKEY="${MASTER_KEY}" \
             -e JF_SHARED_SECURITY_JOINKEY="${JOIN_KEY}" \
             -e EXTRA_JAVA_OPTIONS="-Xms512m -Xmx2048m" \
