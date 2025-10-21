@@ -103,33 +103,29 @@ jobs:
             exit 1
           fi
 
-
-
-
-
-          - name: Create local Maven repo (maven-ci-local)
-            run: |
-              set -euo pipefail
-              tries=0
-              until curl -sSf -u admin:password \
-                -H "Content-Type: application/json" \
-                -X PUT "http://localhost:8081/artifactory/api/repositories/maven-ci-local" \
-                -d '{
-                      "rclass": "local",
-                      "packageType": "maven",
-                      "repoLayoutRef": "maven-2-default",
-                      "handleReleases": true,
-                      "handleSnapshots": true
-                    }' >/dev/null; do
-                tries=$((tries+1))
-                if [ $tries -ge 20 ]; then
-                  echo "Failed creating repo after $tries attempts."
-                  docker logs --tail=200 artifactory || true
-                  exit 1
-                fi
-                sleep 3
-              done
-              echo "Repo ready."
+      - name: Create local Maven repo (maven-ci-local)
+        run: |
+          set -euo pipefail
+          tries=0
+          until curl -sSf -u admin:password \
+            -H "Content-Type: application/json" \
+            -X PUT "http://localhost:8081/artifactory/api/repositories/maven-ci-local" \
+            -d '{
+                  "rclass": "local",
+                  "packageType": "maven",
+                  "repoLayoutRef": "maven-2-default",
+                  "handleReleases": true,
+                  "handleSnapshots": true
+                }' >/dev/null; do
+            tries=$((tries+1))
+            if [ $tries -ge 20 ]; then
+              echo "Failed creating repo after $tries attempts."
+              docker logs --tail=200 artifactory || true
+              exit 1
+            fi
+            sleep 3
+          done
+          echo "Repo ready."
 
       # -----------------------------------------------------------------------
 
@@ -317,4 +313,6 @@ jobs:
 
       - name: Cleanup local Artifactory
         if: always()
-        run: docker rm -f artifactory || true
+        run: 
+          docker rm -f artipg || true
+          docker rm -f artifactory || true
