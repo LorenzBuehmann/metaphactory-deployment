@@ -74,7 +74,7 @@ jobs:
             -e JF_ROUTER_ENTRYPOINTS_EXTERNALPORT="8082" \
             -e JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true" \
             -e EXTRA_JAVA_OPTIONS="-Xms512m -Xmx2048m" \
-            jfrog/artifactory-oss:7.117.18
+            jfrog/artifactory-oss:latest
 
           echo "Waiting for Router (8082)..."
           for i in $(seq 1 240); do
