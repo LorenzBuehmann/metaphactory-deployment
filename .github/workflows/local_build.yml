@@ -20,15 +20,15 @@ jobs:
           fetch-depth: 0
 
       # --- Ephemeral Artifactory (Docker) ------------------------------------
-      - name: Start local Artifactory (with PostgreSQL)
+      - name: Start local Artifactory (with PostgreSQL + clean system.yaml)
         run: |
           set -euo pipefail
       
-          # 0) Network for cross-container DNS
+          # Fresh network for easy DNS between containers
           docker network rm ci-arti-net >/dev/null 2>&1 || true
           docker network create ci-arti-net
       
-          # 1) PostgreSQL sidecar
+          # ---- PostgreSQL sidecar -------------------------------------------------
           docker rm -f artipg >/dev/null 2>&1 || true
           docker run -d --name artipg --network ci-arti-net \
             -e POSTGRES_USER=artifactory \
@@ -39,34 +39,36 @@ jobs:
       
           echo "Waiting for PostgreSQL..."
           for i in $(seq 1 120); do
-            # use the server's pg_isready inside the container
             if docker exec artipg pg_isready -U artifactory -d artifactory >/dev/null 2>&1; then
-              echo "PostgreSQL is ready."
-              break
+              echo "PostgreSQL is ready."; break
             fi
             sleep 2
           done
       
-          # 2) Prepare Artifactory config (system.yaml) with PostgreSQL + master key
-          MASTER_KEY="$(openssl rand -hex 16)"
+          # ---- Generate security keys (exactly 32 hex chars, single line) --------
+          MASTER_KEY="$(openssl rand -hex 16)"   # 16 bytes -> 32 hex chars
+          JOIN_KEY="$(openssl rand -hex 16)"     # same format for join key
+      
+          # ---- Write a VALID system.yaml (no sed, no duplicate 'shared') ----------
           mkdir -p /tmp/arti-conf
-          cat > /tmp/arti-conf/system.yaml <<'YAML'
+          cat > /tmp/arti-conf/system.yaml <<EOF
           configVersion: 1
           shared:
+            security:
+              masterKey: ${MASTER_KEY}
+              joinKey: ${JOIN_KEY}
             database:
               type: postgresql
               driver: org.postgresql.Driver
               url: "jdbc:postgresql://artipg:5432/artifactory"
-              username: artifactory
-              password: artipwd
-          YAML
-          # inject masterKey dynamically
-          sed -i "1i shared:\n  security:\n    masterKey: ${MASTER_KEY}\n" /tmp/arti-conf/system.yaml
+              username: "artifactory"
+              password: "artipwd"
+          EOF
       
-          echo "----- system.yaml -----"
-          sed 's/password: .*/password: ******/' /tmp/arti-conf/system.yaml
+          echo "---- system.yaml (redacted) ----"
+          sed -E 's/(password: ).*/\1******/' /tmp/arti-conf/system.yaml
       
-          # 3) Start Artifactory (OSS)
+          # ---- Start Artifactory --------------------------------------------------
           docker rm -f artifactory >/dev/null 2>&1 || true
           docker run -d --name artifactory --network ci-arti-net \
             --shm-size=1g \
@@ -74,27 +76,24 @@ jobs:
             -v /tmp/arti-conf/system.yaml:/opt/jfrog/artifactory/var/etc/system.yaml:ro \
             -e JF_SHARED_NODE_ID="ci-node-1" \
             -e JF_ROUTER_TLS_ENABLED="false" \
+            # Also export keys via env (belt & suspenders)
+            -e JF_SHARED_SECURITY_MASTERKEY="${MASTER_KEY}" \
+            -e JF_SHARED_SECURITY_JOINKEY="${JOIN_KEY}" \
             -e EXTRA_JAVA_OPTIONS="-Xms512m -Xmx2048m" \
             releases-docker.jfrog.io/jfrog/artifactory-oss:latest
       
+          # ---- Wait for health (Router, then Artifactory ping) --------------------
           echo "Waiting for Router health..."
           for i in $(seq 1 240); do
             code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8082/router/api/v1/system/health" || true)
-            if [ "$code" = "200" ]; then
-              # not strictly needed to parse JSON; 200 is enough for first stage
-              echo "Router responding (HTTP 200)."
-              break
-            fi
+            [ "$code" = "200" ] && { echo "Router OK"; break; }
             sleep 2
           done
       
           echo "Waiting for Artifactory ping..."
           for i in $(seq 1 240); do
             body=$(curl -s "http://localhost:8081/artifactory/api/system/ping" || true)
-            if [ "$body" = "OK" ]; then
-              echo "Artifactory ping OK."
-              break
-            fi
+            [ "$body" = "OK" ] && { echo "Artifactory ping OK"; break; }
             sleep 2
           done
       
@@ -103,6 +102,7 @@ jobs:
             docker logs --tail=300 artifactory || true
             exit 1
           fi
+
 
 
 
