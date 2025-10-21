@@ -20,72 +20,117 @@ jobs:
           fetch-depth: 0
 
       # --- Ephemeral Artifactory (Docker) ------------------------------------
-      - name: Start local Artifactory
+      - name: Start local Artifactory (with PostgreSQL)
         run: |
           set -euo pipefail
       
-          # Generate a 32-hex-char master key (16 bytes -> 32 hex chars)
+          # 0) Network for cross-container DNS
+          docker network rm ci-arti-net >/dev/null 2>&1 || true
+          docker network create ci-arti-net
+      
+          # 1) PostgreSQL sidecar
+          docker rm -f artipg >/dev/null 2>&1 || true
+          docker run -d --name artipg --network ci-arti-net \
+            -e POSTGRES_USER=artifactory \
+            -e POSTGRES_PASSWORD=artipwd \
+            -e POSTGRES_DB=artifactory \
+            -p 5432:5432 \
+            postgres:13-alpine
+      
+          echo "Waiting for PostgreSQL..."
+          for i in $(seq 1 120); do
+            # use the server's pg_isready inside the container
+            if docker exec artipg pg_isready -U artifactory -d artifactory >/dev/null 2>&1; then
+              echo "PostgreSQL is ready."
+              break
+            fi
+            sleep 2
+          done
+      
+          # 2) Prepare Artifactory config (system.yaml) with PostgreSQL + master key
           MASTER_KEY="$(openssl rand -hex 16)"
-          echo "Using generated master key"
+          mkdir -p /tmp/arti-conf
+          cat > /tmp/arti-conf/system.yaml <<'YAML'
+          configVersion: 1
+          shared:
+            database:
+              type: postgresql
+              driver: org.postgresql.Driver
+              url: "jdbc:postgresql://artipg:5432/artifactory"
+              username: artifactory
+              password: artipwd
+          YAML
+          # inject masterKey dynamically
+          sed -i "1i shared:\n  security:\n    masterKey: ${MASTER_KEY}\n" /tmp/arti-conf/system.yaml
       
+          echo "----- system.yaml -----"
+          sed 's/password: .*/password: ******/' /tmp/arti-conf/system.yaml
+      
+          # 3) Start Artifactory (OSS)
           docker rm -f artifactory >/dev/null 2>&1 || true
-      
-          docker run -d --name artifactory \
+          docker run -d --name artifactory --network ci-arti-net \
             --shm-size=1g \
             -p 8081:8081 -p 8082:8082 \
-            -e JF_SHARED_SECURITY_MASTERKEY="$MASTER_KEY" \
+            -v /tmp/arti-conf/system.yaml:/opt/jfrog/artifactory/var/etc/system.yaml:ro \
             -e JF_SHARED_NODE_ID="ci-node-1" \
             -e JF_ROUTER_TLS_ENABLED="false" \
             -e EXTRA_JAVA_OPTIONS="-Xms512m -Xmx2048m" \
             releases-docker.jfrog.io/jfrog/artifactory-oss:latest
       
-          echo "Waiting for Router health (8082) and Artifactory ping (8081) ..."
-      
-          # Wait for Router health to be GREEN
-          for i in $(seq 1 180); do
+          echo "Waiting for Router health..."
+          for i in $(seq 1 240); do
             code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8082/router/api/v1/system/health" || true)
             if [ "$code" = "200" ]; then
-              status=$(curl -s "http://localhost:8082/router/api/v1/system/health" | jq -r '.services[]?.state' 2>/dev/null || true)
-              if echo "$status" | grep -q '^HEALTHY$' || echo "$status" | grep -q 'HEALTHY'; then
-                echo "Router reports healthy."
-                break
-              fi
+              # not strictly needed to parse JSON; 200 is enough for first stage
+              echo "Router responding (HTTP 200)."
+              break
             fi
-            sleep 3
+            sleep 2
           done
       
-          # Then wait for Artifactory service to respond OK
-          for i in $(seq 1 120); do
+          echo "Waiting for Artifactory ping..."
+          for i in $(seq 1 240); do
             body=$(curl -s "http://localhost:8081/artifactory/api/system/ping" || true)
             if [ "$body" = "OK" ]; then
               echo "Artifactory ping OK."
               break
             fi
-            sleep 3
+            sleep 2
           done
       
-          # Final guard with diagnostics
           if ! curl -s "http://localhost:8081/artifactory/api/system/ping" | grep -qx 'OK'; then
-            echo "Artifactory failed to become ready. Recent container logs:"
-            docker logs --tail=200 artifactory || true
+            echo "Artifactory failed to become ready. Recent logs:"
+            docker logs --tail=300 artifactory || true
             exit 1
           fi
 
 
 
-      - name: Create local Maven repo (maven-ci-local)
-        run: |
-          set -euo pipefail
-          curl -sSf -u admin:password \
-            -H "Content-Type: application/json" \
-            -X PUT "http://localhost:8081/artifactory/api/repositories/maven-ci-local" \
-            -d '{
-                  "rclass": "local",
-                  "packageType": "maven",
-                  "repoLayoutRef": "maven-2-default",
-                  "handleReleases": true,
-                  "handleSnapshots": true
-                }' || echo "Repo may already exist"
+
+          - name: Create local Maven repo (maven-ci-local)
+            run: |
+              set -euo pipefail
+              tries=0
+              until curl -sSf -u admin:password \
+                -H "Content-Type: application/json" \
+                -X PUT "http://localhost:8081/artifactory/api/repositories/maven-ci-local" \
+                -d '{
+                      "rclass": "local",
+                      "packageType": "maven",
+                      "repoLayoutRef": "maven-2-default",
+                      "handleReleases": true,
+                      "handleSnapshots": true
+                    }' >/dev/null; do
+                tries=$((tries+1))
+                if [ $tries -ge 20 ]; then
+                  echo "Failed creating repo after $tries attempts."
+                  docker logs --tail=200 artifactory || true
+                  exit 1
+                fi
+                sleep 3
+              done
+              echo "Repo ready."
+
       # -----------------------------------------------------------------------
 
       - name: Install rapper (RDF parser)
