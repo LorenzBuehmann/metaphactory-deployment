@@ -20,36 +20,29 @@ jobs:
           fetch-depth: 0
 
       # --- Ephemeral Artifactory (Docker) ------------------------------------
-      - name: Start local Artifactory (with PostgreSQL + clean system.yaml)
+      - name: Start local Artifactory (PostgreSQL + clean YAML + IPv4)
         run: |
           set -euo pipefail
-      
-          # Fresh network for easy DNS between containers
+
           docker network rm ci-arti-net >/dev/null 2>&1 || true
           docker network create ci-arti-net
-      
-          # ---- PostgreSQL sidecar -------------------------------------------------
+
           docker rm -f artipg >/dev/null 2>&1 || true
-          docker run --rm -d --name artipg --network ci-arti-net \
+          docker run -d --name artipg --network ci-arti-net \
             -e POSTGRES_USER=artifactory \
             -e POSTGRES_PASSWORD=artipwd \
             -e POSTGRES_DB=artifactory \
             -p 5432:5432 \
             postgres:13-alpine
-      
+
           echo "Waiting for PostgreSQL..."
           for i in $(seq 1 120); do
             if docker exec artipg pg_isready -U artifactory -d artifactory >/dev/null 2>&1; then
-              echo "PostgreSQL is ready."; break
-            fi
-            sleep 2
-          done
-      
-          # ---- Generate security keys (exactly 32 hex chars, single line) --------
-          MASTER_KEY="$(openssl rand -hex 16)"   # 16 bytes -> 32 hex chars
-          JOIN_KEY="$(openssl rand -hex 16)"     # same format for join key
-      
-          # ---- Write a VALID system.yaml (no sed, no duplicate 'shared') ----------
+              echo "PostgreSQL is ready."; break; fi; sleep 2; done
+
+          MASTER_KEY="$(openssl rand -hex 16)"
+          JOIN_KEY="$(openssl rand -hex 16)"
+
           mkdir -p /tmp/arti-conf
           cat > /tmp/arti-conf/system.yaml <<EOF
           configVersion: 1
@@ -64,13 +57,12 @@ jobs:
               username: "artifactory"
               password: "artipwd"
           EOF
-      
-          echo "---- system.yaml (redacted) ----"
+
+          # optional: print redacted system.yaml for sanity
           sed -E 's/(password: ).*/\1******/' /tmp/arti-conf/system.yaml
-      
-          # ---- Start Artifactory --------------------------------------------------
+
           docker rm -f artifactory >/dev/null 2>&1 || true
-          docker run --rm -d --name artifactory --network ci-arti-net \
+          docker run -d --name artifactory --network ci-arti-net \
             --shm-size=1g \
             -p 8081:8081 -p 8082:8082 \
             -v /tmp/arti-conf/system.yaml:/opt/jfrog/artifactory/var/etc/system.yaml:ro \
@@ -78,29 +70,32 @@ jobs:
             -e JF_ROUTER_TLS_ENABLED="false" \
             -e JF_SHARED_SECURITY_MASTERKEY="${MASTER_KEY}" \
             -e JF_SHARED_SECURITY_JOINKEY="${JOIN_KEY}" \
+            -e JF_ROUTER_ENTRYPOINTS_EXTERNALIP="127.0.0.1" \
+            -e JF_ROUTER_ENTRYPOINTS_EXTERNALPORT="8082" \
+            -e JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true" \
             -e EXTRA_JAVA_OPTIONS="-Xms512m -Xmx2048m" \
-            releases-docker.jfrog.io/jfrog/artifactory-oss:latest
-      
-          # ---- Wait for health (Router, then Artifactory ping) --------------------
-          echo "Waiting for Router health..."
+            jfrog/artifactory-oss:7.117.18
+
+          echo "Waiting for Router (8082)..."
           for i in $(seq 1 240); do
             code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8082/router/api/v1/system/health" || true)
-            [ "$code" = "200" ] && { echo "Router OK"; break; }
-            sleep 2
-          done
-      
-          echo "Waiting for Artifactory ping..."
+            [ "$code" = "200" ] && { echo "Router OK"; break; }; sleep 2; done
+
+          echo "Waiting for Artifactory ping (8081)..."
           for i in $(seq 1 240); do
             body=$(curl -s "http://localhost:8081/artifactory/api/system/ping" || true)
-            [ "$body" = "OK" ] && { echo "Artifactory ping OK"; break; }
-            sleep 2
-          done
-      
+            [ "$body" = "OK" ] && { echo "Artifactory ping OK."; break; }; sleep 2; done
+
           if ! curl -s "http://localhost:8081/artifactory/api/system/ping" | grep -qx 'OK'; then
-            echo "Artifactory failed to become ready. Recent logs:"
-            docker logs --tail=300 artifactory || true
+            echo "------ router logs (tail) ------"
+            docker exec artifactory sh -c 'tail -n 200 /opt/jfrog/artifactory/var/log/router-service.log' || true
+            echo "------ access logs (tail) ------"
+            docker exec artifactory sh -c 'tail -n 200 /opt/jfrog/artifactory/var/log/access-service.log' || true
+            echo "------ artifactory-service.log (tail) ------"
+            docker exec artifactory sh -c 'tail -n 200 /opt/jfrog/artifactory/var/log/artifactory-service.log' || true
             exit 1
           fi
+
 
       - name: Create local Maven repo (maven-ci-local)
         run: |
@@ -312,6 +307,7 @@ jobs:
 
       - name: Cleanup local Artifactory
         if: always()
-        run: 
+        run: |
           docker rm -f artipg || true
           docker rm -f artifactory || true
+          docker network rm ci-arti-net
