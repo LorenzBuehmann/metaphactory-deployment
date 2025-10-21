@@ -27,14 +27,32 @@ jobs:
             -p 8081:8081 -p 8082:8082 \
             -e EXTRA_JAVA_OPTIONS="-Xms512m -Xmx2048m" \
             releases-docker.jfrog.io/jfrog/artifactory-oss:latest
-          echo "Waiting for Artifactory to be ready..."
+      
+          echo "Waiting for Artifactory (up to ~10 minutes)..."
+          # We intentionally avoid `curl -f` and avoid pipefail within the probe
+          # to allow retries while the service is coming up.
           for i in $(seq 1 120); do
-            if curl -sf http://localhost:8081/artifactory/api/system/ping | grep -q '^OK$'; then
-              echo "Artifactory is up"; break
+            # Check HTTP status WITHOUT -f so non-200 doesn't abort the loop
+            http_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8081/artifactory/api/system/ping" || true)
+            if [ "$http_code" = "200" ]; then
+              body=$(curl -s "http://localhost:8081/artifactory/api/system/ping" || true)
+              if [ "$body" = "OK" ]; then
+                echo "Artifactory is up (got 200 OK)."
+                break
+              fi
             fi
             sleep 5
           done
-          curl -sf http://localhost:8081/artifactory/api/system/ping
+      
+          # Final verification with helpful diagnostics on failure
+          if ! curl -s "http://localhost:8081/artifactory/api/system/ping" | grep -qx 'OK'; then
+            echo "Artifactory failed to become ready. Recent container logs:"
+            docker logs --tail=200 artifactory || true
+            echo "Router health (8082), if available:"
+            curl -s "http://localhost:8082/router/api/v1/system/health" || true
+            exit 1
+          fi
+
 
       - name: Create local Maven repo (maven-ci-local)
         run: |
