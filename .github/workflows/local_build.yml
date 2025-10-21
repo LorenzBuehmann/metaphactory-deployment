@@ -23,35 +23,54 @@ jobs:
       - name: Start local Artifactory
         run: |
           set -euo pipefail
+      
+          # Generate a 32-hex-char master key (16 bytes -> 32 hex chars)
+          MASTER_KEY="$(openssl rand -hex 16)"
+          echo "Using generated master key"
+      
+          docker rm -f artifactory >/dev/null 2>&1 || true
+      
           docker run -d --name artifactory \
+            --shm-size=1g \
             -p 8081:8081 -p 8082:8082 \
+            -e JF_SHARED_SECURITY_MASTERKEY="$MASTER_KEY" \
+            -e JF_SHARED_NODE_ID="ci-node-1" \
+            -e JF_ROUTER_TLS_ENABLED="false" \
             -e EXTRA_JAVA_OPTIONS="-Xms512m -Xmx2048m" \
             releases-docker.jfrog.io/jfrog/artifactory-oss:latest
       
-          echo "Waiting for Artifactory (up to ~10 minutes)..."
-          # We intentionally avoid `curl -f` and avoid pipefail within the probe
-          # to allow retries while the service is coming up.
-          for i in $(seq 1 120); do
-            # Check HTTP status WITHOUT -f so non-200 doesn't abort the loop
-            http_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8081/artifactory/api/system/ping" || true)
-            if [ "$http_code" = "200" ]; then
-              body=$(curl -s "http://localhost:8081/artifactory/api/system/ping" || true)
-              if [ "$body" = "OK" ]; then
-                echo "Artifactory is up (got 200 OK)."
+          echo "Waiting for Router health (8082) and Artifactory ping (8081) ..."
+      
+          # Wait for Router health to be GREEN
+          for i in $(seq 1 180); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8082/router/api/v1/system/health" || true)
+            if [ "$code" = "200" ]; then
+              status=$(curl -s "http://localhost:8082/router/api/v1/system/health" | jq -r '.services[]?.state' 2>/dev/null || true)
+              if echo "$status" | grep -q '^HEALTHY$' || echo "$status" | grep -q 'HEALTHY'; then
+                echo "Router reports healthy."
                 break
               fi
             fi
-            sleep 5
+            sleep 3
           done
       
-          # Final verification with helpful diagnostics on failure
+          # Then wait for Artifactory service to respond OK
+          for i in $(seq 1 120); do
+            body=$(curl -s "http://localhost:8081/artifactory/api/system/ping" || true)
+            if [ "$body" = "OK" ]; then
+              echo "Artifactory ping OK."
+              break
+            fi
+            sleep 3
+          done
+      
+          # Final guard with diagnostics
           if ! curl -s "http://localhost:8081/artifactory/api/system/ping" | grep -qx 'OK'; then
             echo "Artifactory failed to become ready. Recent container logs:"
             docker logs --tail=200 artifactory || true
-            echo "Router health (8082), if available:"
-            curl -s "http://localhost:8082/router/api/v1/system/health" || true
             exit 1
           fi
+
 
 
       - name: Create local Maven repo (maven-ci-local)
