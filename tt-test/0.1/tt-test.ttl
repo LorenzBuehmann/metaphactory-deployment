@@ -14,7 +14,7 @@
   dct:creator "admin";
   dct:modified "2026-01-06T09:36:40.978Z"^^xsd:dateTime;
   dct:title "TTTest"@en;
-  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
+  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/published>;
   vaem:namespace "http://ontologies.metaphacts.com/tt-test/"^^xsd:anyURI;
   rdfs:label "TTTest"@en;
   owl:versionInfo "0.1" .
