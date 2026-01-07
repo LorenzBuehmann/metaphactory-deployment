@@ -27,4 +27,4 @@
   dct:creator "admin";
   dct:modified "2025-10-12T13:27:57.066Z"^^xsd:dateTime;
   rdfs:isDefinedBy :0.2;
-  rdfs:label "A11"@en .
+  rdfs:label "A1"@en .
