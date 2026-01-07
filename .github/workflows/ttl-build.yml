@@ -14,7 +14,7 @@ on:
 
 jobs:
   build:
-    runs-on: [cnrz]
+    runs-on: [self-hosted]
     strategy:
       fail-fast: false
     permissions:
