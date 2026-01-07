@@ -1,0 +1,52 @@
+name: 'metaphactory/ci'
+
+on:
+  push:
+    branches: ['*']
+    paths: ['**/*.ttl']
+  pull_request:
+    branches: ['*']
+    paths: ['**/*.ttl']
+  workflow_dispatch:
+
+jobs:
+  detect_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      ttl-files: ${{ steps.find_ttl.outputs.ttl-files }}
+      has-changes: ${{ steps.find_ttl.outputs.has-changes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find all changed TTL files
+        id: find_ttl
+        run: |
+          changed_files=$(git log -1 --name-only --pretty=format: | grep '\.ttl$' || true)
+          if [ -z "$changed_files" ]; then
+              echo "has-changes=false" >> $GITHUB_OUTPUT
+              echo "ttl-files=[]" >> $GITHUB_OUTPUT
+          else
+              echo "has-changes=true" >> $GITHUB_OUTPUT
+              json_array=$(echo "$changed_files" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+              echo "ttl-files=$json_array" >> $GITHUB_OUTPUT
+              echo "Found TTL files: $json_array"
+          fi
+
+  call_build_workflow:
+    needs: detect_changes
+    if: needs.detect_changes.outputs.has-changes == 'true'
+    strategy:
+      matrix:
+        ttl-file: ${{ fromJson(needs.detect_changes.outputs.ttl-files) }}
+      fail-fast: false
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      id-token: write
+    uses: ./.github/workflows/ttl-build.yml
+    with:
+      ttl_file: ${{ matrix.ttl-file }}
+    secrets: inherit
+    
