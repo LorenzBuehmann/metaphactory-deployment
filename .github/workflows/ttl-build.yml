@@ -1,0 +1,111 @@
+name: 'TTL Build and Deploy'
+
+on:
+  workflow_call:
+    inputs:
+      ttl_file:
+        description: 'TTL file to build'
+        required: true
+        type: string
+    outputs:
+      commiter_email:
+        description: 'Email of the committer who triggered the build'
+        value: ${{ jobs.build.outputs.commiter_email }}
+
+jobs:
+  build:
+    runs-on: [cnrz]
+    strategy:
+      fail-fast: false
+    permissions:
+        contents: read
+        actions: read
+        pull-requests: read
+        id-token: write
+    steps:
+      # ============================================================
+      # 1. Setup: Checkout and Load Secrets
+      # ============================================================
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Make all shell scripts executable
+        run: |
+          find .github/workflows/sh -type f -name "*.sh" -exec chmod +x {} \;
+      # ============================================================
+      # 2. Install Dependencies
+      # ============================================================
+      - name: Install rapper (RDF parser) 
+        run: | 
+          sudo apt-get update
+          sudo apt-get install -y raptor2-utils
+      # ============================================================
+      # 3. Process TTL File and Extract Metadata
+      # ============================================================
+      - name: Process TTL file and extract metadata
+        id: process_ttl
+        run: .github/workflows/sh/process-ttl.sh "${{ inputs.ttl_file }}"
+      # ============================================================
+      # 4. Determine Maven Version (Release vs SNAPSHOT)
+      # ============================================================
+      - name: Decide Maven module version
+        id: decide_version
+        run: |
+          if [ "${{ steps.process_ttl.outputs.is_published }}" = "true" ]; then
+            maven_version="${{ steps.process_ttl.outputs.version_id }}"
+            echo "Using release version: $maven_version"
+          else
+            maven_version="${{ steps.process_ttl.outputs.version_id }}-SNAPSHOT"
+            echo "Using snapshot version: $maven_version"
+          fi
+          echo "maven_version=$maven_version" >> "$GITHUB_OUTPUT"
+      
+      # ============================================================
+      # 6. Resolve OWL Import Dependencies via SPARQL
+      # ============================================================
+      - name: Resolve import versions via SPARQL
+        id: resolve_imports
+        env:
+          SPARQL_ENDPOINT: ${{ vars.SPARQL_ENDPOINT }}
+          SPARQL_AUTH_TOKEN: ${{ secrets.GRAPHDB_USER_PASSWORD_HASH }}
+        run: |
+          .github/workflows/sh/resolve-imports.sh \
+            '${{ steps.process_ttl.outputs.imports }}' \
+            '${{ steps.process_ttl.outputs.is_published }}'
+      # ============================================================
+      # 7. Generate Maven Project Structure and POM
+      # ============================================================
+      - name: Generate Maven project
+        run: |
+          .github/workflows/sh/generate-pom.sh \
+            "${{ steps.process_ttl.outputs.dir }}" \
+            "${{ steps.process_ttl.outputs.ttl }}" \
+            "${{ steps.process_ttl.outputs.ontology_iri }}" \
+            "${{ steps.process_ttl.outputs.ontology_name }}" \
+            "${{ steps.decide_version.outputs.maven_version }}" \
+            "${{ steps.process_ttl.outputs.committer_name }}" \
+            "${{ steps.process_ttl.outputs.committer_email }}" \
+            "${{ steps.process_ttl.outputs.commit_date }}" \
+            "${{ steps.process_ttl.outputs.commit_hash }}"
+      # ============================================================
+      # 8. Setup Maven Build Environment
+      # ============================================================
+      - name: Setup Maven and Artifactory
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          java-distribution: "zulu"
+
+      - name: Set Maven project version
+        working-directory: ${{ steps.process_ttl.outputs.dir }}
+        run: |
+          mvn -q versions:set -DnewVersion="${{ steps.decide_version.outputs.maven_version }}"
+          mvn -q versions:commit
+      # ============================================================
+      # 9. Build and Deploy to Artifactory
+      # ============================================================
+      - name: Build & Deploy to Artifactory
+        working-directory: ${{ steps.process_ttl.outputs.dir }}
+        run: mvn -B deploy
+    outputs:
+      commiter_email: ${{ steps.process_ttl.outputs.committer_email }}
