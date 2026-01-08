@@ -29,6 +29,7 @@ echo "----- End Output -----"
 RDF_TYPE="<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
 OWL_ONTOLOGY="<http://www.w3.org/2002/07/owl#Ontology>"
 SKOS_CONCEPTSCHEME="<http://www.w3.org/2004/02/skos/core#ConceptScheme>"
+OWL_IMPORTS="<http://www.w3.org/2002/07/owl#imports>"
 
 
 # Detect vocabulary type & extract "root" IRI
