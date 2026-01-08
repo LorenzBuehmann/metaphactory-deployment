@@ -12,10 +12,29 @@
   dct:contributor "admin";
   dct:created "2026-01-08T16:08:47.302Z"^^xsd:dateTime;
   dct:creator "admin";
-  dct:modified "2026-01-08T16:08:47.302Z"^^xsd:dateTime;
+  dct:modified "2026-01-08T16:09:20.074Z"^^xsd:dateTime;
   dct:title "TestVocab2"@en;
-  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
+  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/published>;
   vaem:namespace "https://vocabularies.metaphacts.com/test-vocab-2/"^^xsd:anyURI;
   rdfs:label "TestVocab2"@en;
   owl:versionInfo "0.1";
+  skos:hasTopConcept :18595b47-7721-40d8-a85b-a007ca3f2714, :63c6d0dc-0567-42dc-9372-8518e317e256;
   skos:prefLabel "TestVocab2"@en .
+
+:18595b47-7721-40d8-a85b-a007ca3f2714 a skos:Concept;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2026-01-08T16:09:08.962Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2026-01-08T16:09:08.962Z"^^xsd:dateTime;
+  skos:inScheme :0.1;
+  skos:prefLabel "TermAA"@en .
+
+:63c6d0dc-0567-42dc-9372-8518e317e256 a skos:Concept;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2026-01-08T16:09:20.074Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2026-01-08T16:09:20.074Z"^^xsd:dateTime;
+  skos:inScheme :0.1;
+  skos:prefLabel "TermBB"@en .
