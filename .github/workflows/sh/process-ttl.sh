@@ -24,9 +24,39 @@ echo "----- N-Triples Output -----"
 cat "$NT_FILE"
 echo "----- End Output -----"
 
-# Extract ontology IRI
-echo "Extracting ontology IRI..."
-ONTOLOGY_IRI=$(awk '$2 == "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>" && $3 == "<http://www.w3.org/2002/07/owl#Ontology>" {gsub(/[<>]/,"",$1); print $1}' "$NT_FILE" | head -1)
+
+# Constants
+RDF_TYPE="<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
+OWL_ONTOLOGY="<http://www.w3.org/2002/07/owl#Ontology>"
+SKOS_CONCEPTSCHEME="<http://www.w3.org/2004/02/skos/core#ConceptScheme>"
+
+
+# Detect vocabulary type & extract "root" IRI
+echo "Detecting ontology/vocabulary root IRI..."
+VOCAB_TYPE="unknown"
+
+ONTOLOGY_IRI=$(
+  awk -v t="$RDF_TYPE" -v o="$OWL_ONTOLOGY" '
+    $2==t && $3==o {gsub(/[<>]/,"",$1); print $1; exit}
+  ' "$NT_FILE"
+)
+
+if [ -n "${ONTOLOGY_IRI:-}" ]; then
+  VOCAB_TYPE="owl"
+else
+  ONTOLOGY_IRI=$(
+    awk -v t="$RDF_TYPE" -v o="$SKOS_CONCEPTSCHEME" '
+      $2==t && $3==o {gsub(/[<>]/,"",$1); print $1; exit}
+    ' "$NT_FILE"
+  )
+  if [ -n "${ONTOLOGY_IRI:-}" ]; then
+    VOCAB_TYPE="skos"
+  fi
+fi
+
+echo "Detected type: $VOCAB_TYPE"
+echo "Root IRI: $ONTOLOGY_IRI"
+
 
 # Extract version and title
 echo "Extracting version and title..."
@@ -49,13 +79,26 @@ else
 fi
 
 # Extract OWL imports
+#echo "Extracting OWL imports..."
+#IMPORTS=$(awk '/<http:\/\/www\.w3\.org\/2002\/07\/owl#imports>/{
+#     match($0, /<[^>]*>[[:space:]]+<[^>]*>[[:space:]]+<[^>]*>/)
+#     iri = substr($0, RSTART, RLENGTH)
+#     gsub(/.*<|>.*/, "", iri)
+#     print iri
+# }' "$NT_FILE" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+
+# Extract OWL imports (only for OWL; SKOS gets [])
 echo "Extracting OWL imports..."
-IMPORTS=$(awk '/<http:\/\/www\.w3\.org\/2002\/07\/owl#imports>/{
-    match($0, /<[^>]*>[[:space:]]+<[^>]*>[[:space:]]+<[^>]*>/)
-    iri = substr($0, RSTART, RLENGTH)
-    gsub(/.*<|>.*/, "", iri)
-    print iri
-}' "$NT_FILE" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+if [ "$VOCAB_TYPE" = "owl" ]; then
+  IMPORTS=$(
+    awk -v p="$OWL_IMPORTS" '
+      $2==p {gsub(/[<>]/,"",$3); print $3}
+    ' "$NT_FILE" | jq -R -s -c 'split("\n") | map(select(length > 0))'
+  )
+else
+  IMPORTS='[]'
+fi
 
 # Extract Git metadata
 echo "Extracting Git metadata..."
