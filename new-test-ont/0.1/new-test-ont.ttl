@@ -4,6 +4,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix vaem: <http://www.linkedmodel.org/1.2/schema/vaem#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
@@ -12,9 +13,31 @@
   dct:contributor "admin";
   dct:created "2026-01-08T12:35:55.766Z"^^xsd:dateTime;
   dct:creator "admin";
-  dct:modified "2026-01-08T12:35:55.766Z"^^xsd:dateTime;
+  dct:modified "2026-01-08T12:37:00.323Z"^^xsd:dateTime;
   dct:title "NewTestOnt"@en;
   <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
   vaem:namespace "http://ontologies.metaphacts.com/new-test-ont/"^^xsd:anyURI;
   rdfs:label "NewTestOnt"@en;
   owl:versionInfo "0.1" .
+
+:A1 a owl:Class;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2026-01-08T12:37:00.323Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2026-01-08T12:37:00.323Z"^^xsd:dateTime;
+  rdfs:isDefinedBy :0.1;
+  rdfs:label "A1"@en;
+  rdfs:subClassOf skos:Concept .
+
+:f607a6d0-55cf-40f6-b9fb-a87403f58087 a sh:NodeShape;
+  sh:or ([
+        sh:class skos:Concept
+      ] [
+        sh:class :A1
+      ]);
+  sh:property [
+      sh:class skos:ConceptScheme;
+      sh:hasValue <https://vocabularies.metaphacts.com/test-vocab-3/0.1>;
+      sh:path skos:inScheme
+    ] .
