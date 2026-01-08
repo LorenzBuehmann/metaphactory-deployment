@@ -90,11 +90,11 @@ jobs:
       # ============================================================
       # 8. Setup Maven Build Environment
       # ============================================================
-      - name: Setup Maven and Artifactory
-        uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          java-distribution: "zulu"
+      # - name: Setup Maven and Artifactory
+      #   uses: actions/setup-java@v4
+      #   with:
+      #     java-version: "21"
+      #     distribution: "zulu"
 
       - name: Set Maven project version
         working-directory: ${{ steps.process_ttl.outputs.dir }}
