@@ -106,6 +106,6 @@ jobs:
       # ============================================================
       - name: Build & Deploy to Artifactory
         working-directory: ${{ steps.process_ttl.outputs.dir }}
-        run: mvn -B deploy
+        run: mvn -B install
     outputs:
       commiter_email: ${{ steps.process_ttl.outputs.committer_email }}

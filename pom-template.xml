@@ -1,0 +1,61 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>datev.dataintegration.ontologies</groupId>
+  <artifactId>__ARTIFACT_ID__</artifactId>
+  <!-- CI will overwrite this via `mvn versions:set -DnewVersion=...` -->
+  <version>__VERSION_ID__</version>
+  <packaging>jar</packaging>
+
+  <name>__ARTIFACT_ID__</name>
+
+  <distributionManagement>
+    <repository>
+      <id>central</id>
+      <name>maven-central-mirror</name>
+      <url>https://artifactory.datev.de/artifactory/maven-datev-repo</url>
+    </repository>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>maven-central-mirror</name>
+      <url>https://artifactory.datev.de/artifactory/maven-datev-repo</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compiler.release>17</maven.compiler.release>
+    <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
+    <!-- Injected from CI -->
+    <committer.name>__COMMITTER_NAME__</committer.name>
+    <committer.email>__COMMITTER_EMAIL__</committer.email>
+    <commit.date>__COMMIT_DATE__</commit.date>
+    <commit.hash>__COMMIT_HASH__</commit.hash>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Implementation-Title>${project.artifactId}</Implementation-Title>
+              <Implementation-Version>${project.version}</Implementation-Version>
+              <Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
+              <Commit-Hash>${commit.hash}</Commit-Hash>
+              <Commit-Date>${commit.date}</Commit-Date>
+              <Committer-Name>${committer.name}</Committer-Name>
+              <Committer-Email>${committer.email}</Committer-Email>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  __OWL_IMPORT_DEPENDENCIES__
+
+</project>
