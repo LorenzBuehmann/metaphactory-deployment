@@ -1,0 +1,21 @@
+@prefix : <https://vocabularies.metaphacts.com/test-vocab-2/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix vaem: <http://www.linkedmodel.org/1.2/schema/vaem#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:0.1 a skos:ConceptScheme;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2026-01-08T16:08:47.302Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2026-01-08T16:08:47.302Z"^^xsd:dateTime;
+  dct:title "TestVocab2"@en;
+  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
+  vaem:namespace "https://vocabularies.metaphacts.com/test-vocab-2/"^^xsd:anyURI;
+  rdfs:label "TestVocab2"@en;
+  owl:versionInfo "0.1";
+  skos:prefLabel "TestVocab2"@en .
