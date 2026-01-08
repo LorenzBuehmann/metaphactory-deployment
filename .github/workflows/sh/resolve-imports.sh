@@ -52,18 +52,44 @@ run_sparql_query() {
     local auth_header=""
 
     if [[ -z "${SPARQL_AUTH_TOKEN:-}" ]]; then
-        log "GRAPHDB_USER_PASSWORD_HASH is not set"
-        return 1
+        error "GRAPHDB_USER_PASSWORD_HASH is not set"
+    fi
+
+    if [[ -z "${SPARQL_ENDPOINT:-}" ]]; then
+        error "SPARQL_ENDPOINT is not set"
     fi
 
     log "Running SPARQL query..."
     log "Query: $query"
 
-    curl -sG --data-urlencode "query=$query" \
-         -H "Content-Type: application/sparql-query" \
-         -H 'Accept: application/sparql-results+json' \
-         -H "Authorization: Basic $SPARQL_AUTH_TOKEN" \
-        "$SPARQL_ENDPOINT"
+    # Fail fast:
+    # - --fail-with-body: non-2xx becomes non-zero exit
+    # - --connect-timeout / --max-time: avoid hanging
+    # - capture body for diagnostics
+    local response
+    if ! response=$(
+        curl -sS -G \
+          --fail-with-body \
+          --connect-timeout 5 \
+          --max-time 30 \
+          --data-urlencode "query=$query" \
+          -H "Content-Type: application/sparql-query" \
+          -H "Accept: application/sparql-results+json" \
+          -H "Authorization: Basic $SPARQL_AUTH_TOKEN" \
+          "$SPARQL_ENDPOINT"
+    ); then
+        error "SPARQL connection/query failed (endpoint: $SPARQL_ENDPOINT)"
+    fi
+
+    # Fail fast if response isn't valid JSON (GraphDB errors often come back as HTML/text)
+    if ! echo "$response" | jq -e . >/dev/null 2>&1; then
+        log "Raw SPARQL response (non-JSON):"
+        log "$response"
+        error "SPARQL response is not valid JSON"
+    fi
+
+    echo "$response"
+
 }
 
 # Resolve version for a single import IRI
@@ -84,11 +110,9 @@ resolve_import_version() {
     log "Parsed version: $version"
     log "Parsed status: $status"
 
-    # Handle missing version
-    if [[ -z "$version" ]]; then
-        log "Could not resolve version for $artifact_id. Using fallback: LATEST"
-        echo "LATEST"
-        return
+    # Fail fast if no data was found for the import
+    if [[ -z "$version" || -z "$status" ]]; then
+        error "No SPARQL data found for import '$import_iri' (artifact_id: $artifact_id). Check graph <${import_iri}/graph> and that versionInfo/status exist."
     fi
 
     # Check if dependency is published
