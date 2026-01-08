@@ -18,4 +18,4 @@
   vaem:namespace "https://vocabularies.metaphacts.com/test-vocab-3/"^^xsd:anyURI;
   rdfs:label "TestVocab3"@en;
   owl:versionInfo "0.1";
-  skos:prefLabel "TestVocab3"@en .
+  skos:prefLabel "TestVocab33"@en .
