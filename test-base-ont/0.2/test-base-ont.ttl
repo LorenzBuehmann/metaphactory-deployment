@@ -4,7 +4,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix vaem: <http://www.linkedmodel.org/1.2/schema/vaem#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 :0.2 a owl:Ontology;
@@ -12,19 +12,80 @@
   dct:contributor "admin";
   dct:created "2025-10-12T13:26:02.634Z"^^xsd:dateTime;
   dct:creator "admin";
-  dct:modified "2025-10-12T13:27:57.066Z"^^xsd:dateTime;
+  dct:modified "2025-10-15T11:17:44.082Z"^^xsd:dateTime;
   dct:title "TestBaseOnt"@en;
   <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
-  vaem:namespace "http://ontologies.metaphacts.com/test-base-ont/"^^xsd:anyURI;
+  <http://www.linkedmodel.org/1.2/schema/vaem#namespace> "http://ontologies.metaphacts.com/test-base-ont/"^^xsd:anyURI;
   rdfs:label "TestBaseOnt"@en;
   owl:priorVersion :0.1;
   owl:versionInfo "0.2" .
+
+:0f1dd57a-1688-4f89-a774-01a73fab88ee a sh:NodeShape;
+  sh:or ([
+        sh:class skos:Concept
+      ] [
+        sh:class :B1
+      ]);
+  sh:property [
+      sh:class skos:ConceptScheme;
+      sh:hasValue <https://vocabularies.metaphacts.com/test-vocab/0.1>;
+      sh:path skos:inScheme
+    ] .
+
+:215b4176-e84d-4f42-97d1-0498597618ef a sh:NodeShape;
+  sh:or ([
+        sh:class skos:Concept
+      ] [
+        sh:class :C1
+      ]);
+  sh:property [
+      sh:class skos:Collection;
+      sh:hasValue <https://vocabularies.metaphacts.com/delete.me2/0.1/9813f6c5-74ee-4ec8-ae80-9fbe07c7f856>;
+      sh:path [
+          sh:inversePath skos:member
+        ]
+    ] .
 
 :A1 a owl:Class;
   <http://open-services.net/ns/core#modifiedBy> "admin";
   dct:contributor "admin";
   dct:created "2025-10-12T13:27:57.066Z"^^xsd:dateTime;
   dct:creator "admin";
-  dct:modified "2025-10-12T13:27:57.066Z"^^xsd:dateTime;
+  dct:modified "2025-10-15T11:04:00.329Z"^^xsd:dateTime;
   rdfs:isDefinedBy :0.2;
-  rdfs:label "A1"@en .
+  rdfs:label "A1"@en;
+  rdfs:subClassOf skos:Concept .
+
+:B1 a owl:Class;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-10-15T11:02:24.617Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-10-15T11:02:44.872Z"^^xsd:dateTime;
+  rdfs:isDefinedBy :0.2;
+  rdfs:label "B1"@en;
+  rdfs:subClassOf skos:Concept .
+
+:C1 a owl:Class;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-10-15T11:17:44.082Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-10-15T11:17:44.082Z"^^xsd:dateTime;
+  rdfs:isDefinedBy :0.2;
+  rdfs:label "C1"@en;
+  rdfs:subClassOf skos:Concept .
+
+:a1d16662-efee-478b-a0fa-fd05fe0b3777 a sh:NodeShape;
+  sh:or ([
+        sh:class skos:Concept
+      ] [
+        sh:class :A1
+      ]);
+  sh:property [
+      sh:class skos:Concept;
+      sh:hasValue <https://vocabularies.metaphacts.com/delete.me2/6d2b9525-7ceb-478f-ad44-ecb9f9ec5c1e>;
+      sh:path [
+          sh:oneOrMorePath skos:broader
+        ]
+    ] .
