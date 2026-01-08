@@ -12,10 +12,31 @@
   dct:contributor "admin";
   dct:created "2026-01-08T10:21:09.856Z"^^xsd:dateTime;
   dct:creator "admin";
-  dct:modified "2026-01-08T10:21:09.856Z"^^xsd:dateTime;
+  dct:modified "2026-01-08T13:08:38.628Z"^^xsd:dateTime;
   dct:title "TestVocab3"@en;
   <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
   vaem:namespace "https://vocabularies.metaphacts.com/test-vocab-3/"^^xsd:anyURI;
   rdfs:label "TestVocab3"@en;
   owl:versionInfo "0.1";
-  skos:prefLabel "TestVocab33"@en .
+  skos:hasTopConcept :394c9aa8-57ff-481a-b9b8-b40cebefd095, :52895068-d60e-40c6-aca3-0ec9808da48a;
+  skos:prefLabel "TestVocab3"@en .
+
+:394c9aa8-57ff-481a-b9b8-b40cebefd095 a skos:Concept;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2026-01-08T13:08:28.169Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2026-01-08T13:08:28.169Z"^^xsd:dateTime;
+  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
+  skos:inScheme :0.1;
+  skos:prefLabel "TermA"@en .
+
+:52895068-d60e-40c6-aca3-0ec9808da48a a skos:Concept;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2026-01-08T13:08:38.628Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2026-01-08T13:08:38.628Z"^^xsd:dateTime;
+  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
+  skos:inScheme :0.1;
+  skos:prefLabel "TermB"@en .
