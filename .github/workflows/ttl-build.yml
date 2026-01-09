@@ -66,7 +66,7 @@ jobs:
           echo "maven_version=$maven_version" >> "$GITHUB_OUTPUT"
       
       # ============================================================
-      # 6. Resolve OWL Import Dependencies via SPARQL
+      # 6a. Resolve OWL Import Dependencies via SPARQL
       # ============================================================
       - name: Resolve import versions via SPARQL
         id: resolve_imports
@@ -77,6 +77,20 @@ jobs:
           .github/workflows/sh/resolve-imports.sh \
             '${{ steps.process_ttl.outputs.imports }}' \
             '${{ steps.process_ttl.outputs.is_published }}'
+
+      # ============================================================
+      # 6b. Resolve referenced vocabularies via SPARQL
+      # ============================================================
+      - name: Resolve referenced vocabularies via SPARQL
+        id: resolve_vocab_refs
+        env:
+          SPARQL_ENDPOINT: ${{ vars.SPARQL_ENDPOINT }}
+          SPARQL_AUTH_TOKEN: ${{ secrets.GRAPHDB_USER_PASSWORD_HASH }}
+        run: |
+          .github/workflows/sh/resolve-referenced-vocabs.sh \
+            '${{ steps.process_ttl.outputs.ontology_iri }}' \
+            '${{ steps.process_ttl.outputs.is_published }}'
+      
       # ============================================================
       # 7. Generate Maven Project Structure and POM
       # ============================================================
