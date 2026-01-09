@@ -68,7 +68,7 @@ PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX sh:   <http://www.w3.org/ns/shacl#>
 PREFIX bibo: <http://purl.org/ontology/bibo/>
 
-SELECT DISTINCT ?vocab ?name ?version ?status WHERE {
+SELECT DISTINCT ?vocab ?version ?status WHERE {
   GRAPH <\($g)> {
     {
       [ sh:class skos:ConceptScheme ;
@@ -97,8 +97,8 @@ SELECT DISTINCT ?vocab ?name ?version ?status WHERE {
   }
 
   ?vocab bibo:status  ?status ;
-         owl:versionInfo ?version ;
-         rdfs:label ?name .
+         owl:versionInfo ?version 
+  .
 }"
   '
 }
