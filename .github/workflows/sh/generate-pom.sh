@@ -64,7 +64,12 @@ group_id=$(
 )
 
 if [[ -z "${group_id:-}" ]]; then
-  echo "❌ Could not derive groupId from ONTOLOGY_IRI='$ONTOLOGY_IRI' (expected '/meta/.../<artifact>/
+  echo "❌ Could not derive groupId from ONTOLOGY_IRI='$ONTOLOGY_IRI' (expected '/meta/.../<artifact>/<version>')" >&2
+  exit 1
+fi
+
+GROUP_ID="${BASE_GROUP_ID}.${group_id}"
+
 
 
 # Generate artifact ID
