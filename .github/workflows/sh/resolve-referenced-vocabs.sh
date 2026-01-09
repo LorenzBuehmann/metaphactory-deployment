@@ -18,10 +18,14 @@ GROUP_ID="datev.dataintegration.ontologies"
 log() { echo "$@" >&2; }
 error() { echo "❌ $*" >&2; exit 1; }
 
+# Convert IRI to artifact ID
 to_artifact_id() {
-  local iri="$1"
-  iri=$(echo "$iri" | sed -E 's/[#\/]+$//')
-  echo "$iri" | awk -F'[/#]' '{ print tolower($(NF-1)) }'
+  echo "$1" \
+        | sed -E 's#[/#]+$##' \
+        | awk -F'[/#]' '{print $(NF-1)}' \
+        | sed -E 's/([a-z0-9])([A-Z])/\1-\2/g' \
+        | tr '_' '-' \
+        | tr '[:upper:]' '[:lower:]'
 }
 
 run_sparql_query() {
