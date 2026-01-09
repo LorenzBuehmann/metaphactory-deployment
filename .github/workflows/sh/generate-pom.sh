@@ -69,7 +69,7 @@ if [[ -z "${group_id:-}" ]]; then
 fi
 
 GROUP_ID="${BASE_GROUP_ID}.${group_id}"
-
+echo "✅ Derived groupId: $GROUP_ID"
 
 
 # Generate artifact ID
