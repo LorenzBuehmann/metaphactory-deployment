@@ -85,7 +85,7 @@ artifact_id=$(
 
 # Generate POM from template
 echo "Generating POM file from template..."
-sed -e "s/__GROUP_ID__/$group_id/g" \
+sed -e "s/__GROUP_ID__/$GROUP_ID/g" \
     -e "s/__ARTIFACT_ID__/$artifact_id/g" \
     -e "s/__VERSION_ID__/$MAVEN_VERSION/g" \
     -e "s/__COMMITTER_NAME__/$COMMITTER_NAME/g" \
