@@ -4,6 +4,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix vaem: <http://www.linkedmodel.org/1.2/schema/vaem#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
@@ -12,9 +13,57 @@
   dct:contributor "admin";
   dct:created "2026-01-09T11:04:47.991Z"^^xsd:dateTime;
   dct:creator "admin";
-  dct:modified "2026-01-09T11:04:47.991Z"^^xsd:dateTime;
+  dct:modified "2026-01-09T11:05:44.552Z"^^xsd:dateTime;
   dct:title "Tax"@en;
   <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
   vaem:namespace "http://data.datev.com/meta/domain-c/tax/0.1#"^^xsd:anyURI;
   rdfs:label "Tax"@en;
   owl:versionInfo "0.1" .
+
+:04401f58-45e5-4e7b-a2b3-1ee9103b15d3 a sh:NodeShape;
+  sh:or ([
+        sh:class skos:Concept
+      ] [
+        sh:class :TaxB
+      ]);
+  sh:property [
+      sh:class skos:Concept;
+      sh:hasValue <https://vocabularies.metaphacts.com/delete.me2/6d2b9525-7ceb-478f-ad44-ecb9f9ec5c1e>;
+      sh:path [
+          sh:oneOrMorePath skos:broader
+        ]
+    ] .
+
+:7fb6a1b2-9ee0-4c1a-b1b4-f719161ca070 a sh:NodeShape;
+  sh:or ([
+        sh:class skos:Concept
+      ] [
+        sh:class :TaxA
+      ]);
+  sh:property [
+      sh:class skos:Collection;
+      sh:hasValue <https://vocabularies.metaphacts.com/test-vocab-3/0.1/ef90db7e-44ce-4778-b820-344dba30c9aa>;
+      sh:path [
+          sh:inversePath skos:member
+        ]
+    ] .
+
+:TaxA a owl:Class;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2026-01-09T11:05:44.552Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2026-01-09T11:05:44.552Z"^^xsd:dateTime;
+  rdfs:isDefinedBy <http://data.datev.com/meta/domain-c/tax/0.1>;
+  rdfs:label "TaxA"@en;
+  rdfs:subClassOf skos:Concept .
+
+:TaxB a owl:Class;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2026-01-09T11:05:44.552Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2026-01-09T11:05:44.552Z"^^xsd:dateTime;
+  rdfs:isDefinedBy <http://data.datev.com/meta/domain-c/tax/0.1>;
+  rdfs:label "TaxB"@en;
+  rdfs:subClassOf skos:Concept .
