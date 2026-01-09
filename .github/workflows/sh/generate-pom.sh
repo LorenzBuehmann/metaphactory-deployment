@@ -29,6 +29,44 @@ mkdir -p "$ONTOLOGY_DIR/src/main/resources"
 cp "$NT_FILE" "$ONTOLOGY_DIR/src/main/resources/"
 echo "Copied $NT_FILE to resources"
 
+# Generate the group ID here
+# we have to use anything after the meta segment, to be able to distinguish between
+# different ontologies with the same name but in different domains
+BASE_GROUP_ID="datev.dataintegration.ontologies"
+
+group_id=$(
+  echo "$ONTOLOGY_IRI" \
+    | sed -E 's#[/#]+$##' \
+    | awk -F'[/#]' '
+        {
+          # Find "meta" segment and print segments after it up to (but excluding) artifact and version.
+          # Layout: ... / meta / <group...> / <artifact> / <version>
+          meta_idx = 0
+          for (i=1; i<=NF; i++) if ($i == "meta") { meta_idx = i; break }
+
+          if (meta_idx == 0) {
+            # no "meta" segment -> print nothing (handled later)
+            exit
+          }
+
+          # group segments are from meta_idx+1 to NF-2
+          out = ""
+          for (i = meta_idx+1; i <= NF-2; i++) {
+            if ($i == "") continue
+            if (out == "") out = $i
+            else out = out "/" $i
+          }
+          print out
+        }
+      ' \
+    | tr '/' '.' \
+    | tr '[:upper:]' '[:lower:]'
+)
+
+if [[ -z "${group_id:-}" ]]; then
+  echo "❌ Could not derive groupId from ONTOLOGY_IRI='$ONTOLOGY_IRI' (expected '/meta/.../<artifact>/
+
+
 # Generate artifact ID
 artifact_id=$(
         echo "$ONTOLOGY_IRI" \
@@ -39,9 +77,11 @@ artifact_id=$(
         | tr '[:upper:]' '[:lower:]'
     )
 
+
 # Generate POM from template
 echo "Generating POM file from template..."
-sed -e "s/__ARTIFACT_ID__/$artifact_id/g" \
+sed -e "s/__GROUP_ID__/$group_id/g" \
+    -e "s/__ARTIFACT_ID__/$artifact_id/g" \
     -e "s/__VERSION_ID__/$MAVEN_VERSION/g" \
     -e "s/__COMMITTER_NAME__/$COMMITTER_NAME/g" \
     -e "s/__COMMITTER_EMAIL__/$COMMITTER_EMAIL/g" \

@@ -1,6 +1,6 @@
 <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>datev.dataintegration.ontologies</groupId>
+  <groupId>__GROUP_ID__</groupId>
   <artifactId>__ARTIFACT_ID__</artifactId>
   <!-- CI will overwrite this via `mvn versions:set -DnewVersion=...` -->
   <version>__VERSION_ID__</version>

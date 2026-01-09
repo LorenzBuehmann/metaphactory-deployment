@@ -90,7 +90,32 @@ jobs:
           .github/workflows/sh/resolve-referenced-vocabs.sh \
             '${{ steps.process_ttl.outputs.ontology_iri }}' \
             '${{ steps.process_ttl.outputs.is_published }}'
-      
+
+      # ============================================================
+      # 6c. Merge dependencies (imports + referenced vocabs)
+      # ============================================================
+      - name: Merge dependency blocks
+        run: |
+          test -f dependencies.xml || echo "<dependencies/>" > dependencies.xml
+          test -f vocab-dependencies.xml || echo "<dependencies/>" > vocab-dependencies.xml
+
+          imports_inner="$(sed -n '/<dependencies>/,/<\/dependencies>/p' dependencies.xml | sed '1d;$d' || true)"
+          vocabs_inner="$(sed -n '/<dependencies>/,/<\/dependencies>/p' vocab-dependencies.xml | sed '1d;$d' || true)"
+
+          if [ -z "${imports_inner}${vocabs_inner}" ]; then
+            echo "<dependencies/>" > dependencies.xml
+          else
+            {
+              echo "<dependencies>"
+              [ -n "$imports_inner" ] && echo "$imports_inner"
+              [ -n "$vocabs_inner" ] && echo "$vocabs_inner"
+              echo "</dependencies>"
+            } > dependencies.xml
+          fi
+
+          echo "==> Merged dependencies.xml:"
+          cat dependencies.xml
+
       # ============================================================
       # 7. Generate Maven Project Structure and POM
       # ============================================================
