@@ -15,11 +15,11 @@ on:
 jobs:
   build:
     runs-on: [self-hosted]
-    container:
-      image: ubuntu:24.04
-      options: >-
-        --network host
-        -v /home/runner/.m2:/root/.m2
+    # container:
+    #   image: ubuntu:24.04
+    #   options: >-
+    #     --network host
+    #     -v /home/runner/.m2:/root/.m2
     strategy:
       fail-fast: false
     permissions:
