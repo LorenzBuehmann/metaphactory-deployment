@@ -14,7 +14,7 @@
   dct:creator "admin";
   dct:modified "2025-09-08T12:52:12.118Z"^^xsd:dateTime;
   dct:title "delete.me2"@en;
-  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/draft>;
+  <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/published>;
   vaem:namespace <https://vocabularies.metaphacts.com/delete.me2/>;
   rdfs:label "delete.me2"@en;
   owl:priorVersion :0.1;
