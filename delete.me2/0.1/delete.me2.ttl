@@ -4,7 +4,6 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix vaem: <http://www.linkedmodel.org/1.2/schema/vaem#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 :0.1 a skos:ConceptScheme;
@@ -12,14 +11,34 @@
   dct:contributor "admin";
   dct:created "2025-07-14T12:58:06.857Z"^^xsd:dateTime;
   dct:creator "admin";
-  dct:modified "2025-07-30T09:20:02.625Z"^^xsd:dateTime;
+  dct:modified "2025-09-08T12:52:12.118Z"^^xsd:dateTime;
   dct:title "delete.me2"@en;
   <http://purl.org/ontology/bibo/status> <http://purl.org/spar/pso/published>;
-  vaem:namespace <https://vocabularies.metaphacts.com/delete.me2/>;
+  <http://www.linkedmodel.org/1.2/schema/vaem#namespace> <https://vocabularies.metaphacts.com/delete.me2/>;
   rdfs:label "delete.me2"@en;
   owl:versionInfo "0.1";
   skos:hasTopConcept :6d2b9525-7ceb-478f-ad44-ecb9f9ec5c1e;
   skos:prefLabel "delete.me2"@en .
+
+<https://vocabularies.metaphacts.com/delete.me2/0.1/9813f6c5-74ee-4ec8-ae80-9fbe07c7f856>
+  a skos:Collection;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-09-08T12:51:57.583Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-09-08T12:52:12.118Z"^^xsd:dateTime;
+  skos:member :53718b97-0d23-4f7c-8ae5-089c85d346c8, :e04b1ce3-e118-498d-a750-f9adb688fffe;
+  skos:prefLabel "Test collection"@en .
+
+:53718b97-0d23-4f7c-8ae5-089c85d346c8 a skos:Concept;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-09-08T12:51:26.291Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-09-08T12:51:26.291Z"^^xsd:dateTime;
+  skos:broader :61ef6685-3e42-4cca-98fb-1a0eeb6c655d;
+  skos:inScheme :0.1;
+  skos:prefLabel "A11"@en .
 
 :61ef6685-3e42-4cca-98fb-1a0eeb6c655d a skos:Concept;
   <http://open-services.net/ns/core#modifiedBy> "admin";
@@ -39,3 +58,23 @@
   dct:modified "2025-07-14T12:59:24.312Z"^^xsd:dateTime;
   skos:inScheme :0.1;
   skos:prefLabel "A"@en .
+
+:ba6fef3f-7d08-4fd7-87c1-1f1dc1087523 a skos:Concept;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-09-08T12:51:16.006Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-09-08T12:51:16.006Z"^^xsd:dateTime;
+  skos:broader :6d2b9525-7ceb-478f-ad44-ecb9f9ec5c1e;
+  skos:inScheme :0.1;
+  skos:prefLabel "A2"@en .
+
+:e04b1ce3-e118-498d-a750-f9adb688fffe a skos:Concept;
+  <http://open-services.net/ns/core#modifiedBy> "admin";
+  dct:contributor "admin";
+  dct:created "2025-09-08T12:51:35.945Z"^^xsd:dateTime;
+  dct:creator "admin";
+  dct:modified "2025-09-08T12:51:35.945Z"^^xsd:dateTime;
+  skos:broader :ba6fef3f-7d08-4fd7-87c1-1f1dc1087523;
+  skos:inScheme :0.1;
+  skos:prefLabel "A21"@en .
