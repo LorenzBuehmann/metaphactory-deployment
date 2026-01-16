@@ -281,12 +281,12 @@
   Overrides for vocabulary subject templates and settings
 --]]
 
-[[!--
+
 <template-fragment export id='vocabulariesBaseIri'
   description='Base IRI for the vocabularies'
   params='{}'
->https://vocabularies.metaphacts.com/</template-fragment>
---]]
+>https://data.datev.de/meta/</template-fragment>
+
 
 [[!--
 <template-fragment export id='vocabularyNamespaceBaseIri'
@@ -295,15 +295,16 @@
 >https://vocabularies.metaphacts.com/</template-fragment>
 --]]
 
-[[!--
+
 <template-fragment export id='vocabulary'
   description='Subject template for a SKOS vocabulary'
   params='{
     "baseIri": {"type": "string"},
-    "title": {"type": "string"}
+    "title": {"type": "string"},
+    "version": {"type": "string"}
   }'
 >{{baseIri}}{{title}}</template-fragment>
---]]
+
 
 [[!--
 <template-fragment export id='vocabularyNamespace'
